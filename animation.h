@@ -10,16 +10,20 @@ namespace GameObjects {
 
 struct Animation
 {
+    int id;
     std::optional<sf::Sprite> sprite;
+    int color_index;
     sf::Vector2f size;
     sf::Vector2f half_size;
     int frame_count;
     int speed;
     int frame;
+    bool isAlive;
 };
 
-void create_animation(Animation & anim, const sf::Texture & tex, float fw, float fh, int fc = 1, int spd = 0)
+void create_animation(Animation & anim, int id, const sf::Texture & tex, float fw, float fh, int fc = 1, int spd = 0)
 {
+    anim.id = id;
     // frame size
     anim.size.x = fw;
     anim.size.y = fh;
@@ -34,6 +38,8 @@ void create_animation(Animation & anim, const sf::Texture & tex, float fw, float
         sf::IntRect({anim.frame * static_cast<int>(anim.size.x), 0},
                     {static_cast<int>(anim.size.x), static_cast<int>(anim.size.y)}));
     anim.sprite.value().setOrigin(anim.half_size);
+    anim.color_index = 15;
+    anim.isAlive = true;
 }
 
 void animation_update(Animation & anim, int gFrame)

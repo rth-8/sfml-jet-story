@@ -1,6 +1,24 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
+bool checkCollision(const js::GameObjects::Animation & a1, const js::GameObjects::Animation & a2)
+{
+    const auto & pos1 = a1.sprite.value().getPosition() - a1.half_size;
+    const auto & pos2 = a2.sprite.value().getPosition() - a2.half_size;
+
+    if (pos1.x < pos2.x + a2.size.x && 
+        pos1.x + a1.size.x > pos2.x && 
+        pos1.y < pos2.y + a2.size.y &&
+        pos1.y + a1.size.y > pos2.y)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 bool checkCollision(
     const sf::Sprite & moving, const sf::Vector2f & movingHalfSize, const sf::Vector2f & movingPrevPos,
     const sf::Sprite & still, const sf::Vector2f & stillHalfSize, 

@@ -8,6 +8,7 @@
 struct Assets
 {
     std::vector<sf::Texture> walls;
+    std::vector<sf::Texture> items;
     sf::Texture ship;
     sf::Texture ship_flame_down_big;
     sf::Texture ship_flame_down_small;
@@ -25,6 +26,18 @@ void load_wall_textures(Assets & assets)
     {
         assets.walls.push_back(sf::Texture(std::format("./images/walls/wall_{:02d}.png", i)));
     }
+}
+
+void load_item_textures(Assets & assets)
+{
+    assets.items.push_back(sf::Texture("./images/items/item_ammo.png"));    // 0
+    assets.items.push_back(sf::Texture("./images/items/item_ball.png"));    // 1
+    assets.items.push_back(sf::Texture("./images/items/item_fuel.png"));    // 2
+    assets.items.push_back(sf::Texture("./images/items/item_m_d.png"));     // 3
+    assets.items.push_back(sf::Texture("./images/items/item_m_lr.png"));    // 4
+    assets.items.push_back(sf::Texture("./images/items/item_shield.png"));  // 5
+    assets.items.push_back(sf::Texture("./images/items/item_star.png"));    // 6
+    assets.items.push_back(sf::Texture("./images/items/item_random.png"));  // 7
 }
 
 void load_ship_textures(Assets & assets)

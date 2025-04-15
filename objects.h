@@ -11,6 +11,7 @@ namespace GameObjects {
 struct Room
 {
     std::vector<Animation> walls;
+    std::vector<Animation> items;
 };
 
 struct Maze
@@ -27,12 +28,26 @@ void create_room(Room & ro, const js::Data::Room & room, const Assets & assets)
         const sf::Texture & tex = assets.walls[room.walls[i].texid];
 
         Animation anim;
-        create_animation(anim, tex, tex.getSize().x, tex.getSize().y);
+        create_animation(anim, room.walls[i].texid, tex, tex.getSize().x, tex.getSize().y);
         anim.sprite.value().setPosition(
             {static_cast<float>(room.walls[i].x) + anim.half_size.x, 
              static_cast<float>(room.walls[i].y) + anim.half_size.y + 100});
 
         ro.walls.push_back(anim);
+    }
+
+    for (int i=0; i<room.items.size(); ++i)
+    {
+        const sf::Texture & tex = assets.items[room.items[i].id];
+
+        Animation anim;
+        create_animation(anim, room.items[i].id, tex, tex.getSize().x, tex.getSize().y);
+        anim.sprite.value().setPosition(
+            {static_cast<float>(room.items[i].x) + anim.half_size.x, 
+             static_cast<float>(room.items[i].y) + anim.half_size.y + 100 + 6});
+        anim.color_index = 0;
+
+        ro.items.push_back(anim);
     }
 }
 
@@ -49,6 +64,15 @@ void create_maze(Maze & mo, const js::Data::Maze & maze, const Assets & assets)
 Room & get_current_room(Maze & mo)
 {
     return mo.rooms[mo.current_room_row * COLS + mo.current_room_col];
+}
+
+void update_item(Animation & item, int gFrame)
+{
+    if (gFrame % 6 == 0)
+    {
+        item.color_index = (item.color_index + 1) % item_colors_loop.size();
+        item.sprite.value().setColor(zx_colors[item_colors_loop[item.color_index]]);
+    }
 }
 
 enum SpecialType
@@ -70,16 +94,17 @@ struct Ship
     Animation ship_flame_back;
     sf::Vector2f previous_position;
     sf::Vector2f velocity;
-    uint8_t shield;
-    uint8_t fuel;
+    int shield;
+    int fuel;
 
     std::optional<Animation> cannon;
     sf::Vector2f cannon_previous_position;
     sf::Vector2f cannon_velocity;
-    uint8_t cannon_ammo;
+    int cannon_ammo;
 
     std::optional<Animation> special;
     SpecialType special_type;
+    int next_special;
     sf::Vector2f special_previous_position;
     sf::Vector2f special_velocity;
     uint8_t special_ammo;
@@ -89,24 +114,29 @@ struct Ship
     bool thrust_horiz;
 };
 
+#define HEALTH_MAX 1000.0f
+#define FUEL_MAX 1000.0f
+#define AMMO_MAX 1000
+
 void create_ship(Ship & ship, const sf::Vector2f & pos, const Assets & assets)
 {
-    create_animation(ship.ship_body, assets.ship, assets.ship.getSize().x, assets.ship.getSize().y);
+    create_animation(ship.ship_body, 0, assets.ship, assets.ship.getSize().x, assets.ship.getSize().y);
     ship.ship_body.sprite.value().setPosition(pos);
 
-    create_animation(ship.ship_flame_back, assets.ship_flame_back, 43, 35, 2, 4);
-    create_animation(ship.ship_flame_down_big, assets.ship_flame_down_big, 32, 44, 2, 4);
-    create_animation(ship.ship_flame_down_small, assets.ship_flame_down_small, 19, 38, 2, 4);
+    create_animation(ship.ship_flame_back, 0, assets.ship_flame_back, 43, 35, 2, 4);
+    create_animation(ship.ship_flame_down_big, 0, assets.ship_flame_down_big, 32, 44, 2, 4);
+    create_animation(ship.ship_flame_down_small, 0, assets.ship_flame_down_small, 19, 38, 2, 4);
 
     ship.previous_position = pos;
     ship.velocity = {0.0f, 0.0f};
 
-    ship.shield = 100;
-    ship.fuel = 100;
-    ship.cannon_ammo = 100;
+    ship.shield = HEALTH_MAX;
+    ship.fuel = FUEL_MAX;
+    ship.cannon_ammo = AMMO_MAX;
 
-    ship.special_type = SpecialType::MISSILE_SIDE;
-    ship.special_ammo = 40;
+    ship.special_type = SpecialType::BALL;
+    ship.next_special = INT_MAX;
+    ship.special_ammo = 4;
 
     ship.thrust_up = false;
     ship.thrust_horiz = false;
@@ -157,10 +187,42 @@ void update_ship(Ship & ship)
     ship.ship_flame_back.sprite.value().setScale(ship.ship_body.sprite.value().getScale());
 }
 
+void get_item(Ship & ship, int id)
+{
+    switch (id)
+    {
+        case 0:
+            ship.cannon_ammo = AMMO_MAX;
+            break;
+        case 1:
+            ship.special_type = js::GameObjects::BALL;
+            ship.special_ammo = 20;
+            break;
+        case 2:
+            ship.fuel = FUEL_MAX;
+            break;
+        case 3:
+            ship.special_type = js::GameObjects::MISSILE_DOWN;
+            ship.special_ammo = 50;
+            break;
+        case 4:
+            ship.special_type = js::GameObjects::MISSILE_SIDE;
+            ship.special_ammo = 50;
+            break;
+        case 5:
+            ship.shield = HEALTH_MAX;
+            break;
+        case 6:
+            ship.special_type = js::GameObjects::STAR;
+            ship.special_ammo = 20;
+            break;
+    }
+}
+
 void create_cannon(Ship & ship, const Assets & assets)
 {
     ship.cannon = std::make_optional<Animation>();
-    create_animation(ship.cannon.value(), assets.ship_cannon, assets.ship_cannon.getSize().x, assets.ship_cannon.getSize().y);
+    create_animation(ship.cannon.value(), 0, assets.ship_cannon, assets.ship_cannon.getSize().x, assets.ship_cannon.getSize().y);
     ship.cannon.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
     ship.cannon_previous_position = ship.cannon.value().sprite.value().getPosition();
     ship.cannon_velocity = {ship.ship_body.sprite.value().getScale().x * 600.0f, 0.0f};
@@ -178,12 +240,12 @@ void create_special(Ship & ship, const Assets & assets)
     switch (ship.special_type)
     {
         case BALL:
-            create_animation(ship.special.value(), assets.special_ball, assets.special_ball.getSize().x, assets.special_ball.getSize().y);
+            create_animation(ship.special.value(), BALL, assets.special_ball, assets.special_ball.getSize().x, assets.special_ball.getSize().y);
             ship.special_velocity = {250.0f, 250.0f};
             break;
 
         case MISSILE_SIDE:
-            create_animation(ship.special.value(), assets.special_missile_side, 
+            create_animation(ship.special.value(), MISSILE_SIDE, assets.special_missile_side, 
                 assets.special_missile_side.getSize().x, assets.special_missile_side.getSize().y);
             ship.special.value().sprite.value().setScale(ship.ship_body.sprite.value().getScale());
             ship.special.value().sprite.value().setColor(sf::Color::Cyan);
@@ -191,20 +253,30 @@ void create_special(Ship & ship, const Assets & assets)
             break;
 
         case MISSILE_DOWN:
-            create_animation(ship.special.value(), assets.special_missile_down, 
+            create_animation(ship.special.value(), MISSILE_DOWN, assets.special_missile_down, 
                 assets.special_missile_down.getSize().x, assets.special_missile_down.getSize().y);
             ship.special.value().sprite.value().setColor(sf::Color::Cyan);
             ship.special_velocity = {ship.velocity.x * 20.0f, 300.0f};
             break;
 
         case STAR:
-            create_animation(ship.special.value(), assets.special_star, assets.special_star.getSize().x, assets.special_star.getSize().y);
+            create_animation(ship.special.value(), STAR, assets.special_star, assets.special_star.getSize().x, assets.special_star.getSize().y);
             break;
     }
 
     ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
     ship.special_previous_position = ship.special.value().sprite.value().getPosition();
     ship.special_lifespan = 0;
+}
+
+void reset_special(Ship & ship)
+{
+    ship.special.reset();
+    if (ship.next_special < INT_MAX)
+    {
+        get_item(ship, ship.next_special);
+        ship.next_special = INT_MAX;
+    }
 }
 
 void move_special(float dt, Ship & ship)
@@ -216,7 +288,7 @@ void move_special(float dt, Ship & ship)
             ship.special_lifespan += dt;
             if (ship.special_lifespan >= SPECIAL_BALL_LIFESPAN)
             {
-                ship.special.reset();
+                reset_special(ship);
             }
             break;
 
@@ -252,7 +324,7 @@ void move_special(float dt, Ship & ship)
             ship.special_lifespan += dt;
             if (ship.special_lifespan >= SPECIAL_BALL_LIFESPAN)
             {
-                ship.special.reset();
+                reset_special(ship);
             }
             break;
         }

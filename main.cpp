@@ -7,6 +7,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Vector2.hpp>
 
+#include "zx_colors.h"
 #include "assets.h"
 #include "maze.h"
 #include "animation.h"
@@ -35,6 +36,7 @@ int main()
 
     Assets assets;
     load_wall_textures(assets);
+    load_item_textures(assets);
     load_ship_textures(assets);
     
     js::Data::Maze maze;
@@ -143,10 +145,7 @@ int main()
             // cannon vs. walls
             if (ship_o.cannon.has_value())
             {
-                vec.x = 0;
-                vec.y = 0;
-                if (checkCollision(ship_o.cannon.value().sprite.value(), ship_o.cannon.value().half_size, ship_o.cannon_previous_position, 
-                                    wall_o.sprite.value(), wall_o.half_size, vec))
+                if (checkCollision(ship_o.cannon.value(), wall_o))
                 {
                     ship_o.cannon.reset();
                 }
@@ -177,10 +176,31 @@ int main()
                             break;
                         default:
                             // missiles are destroyed
-                            ship_o.special.reset();
+                            js::GameObjects::reset_special(ship_o);
                             break;
                     }
                 }
+            }
+        } // walls collisions
+
+        for (auto & item_o : room_o.items)
+        {
+            // ship vs item
+            if (checkCollision(ship_o.ship_body, item_o))
+            {
+                int id = item_o.id;
+                if (item_o.id == 7) 
+                    id = std::rand() % 7;
+                
+                if (ship_o.special.has_value() && (id == 1 || id == 3 || id == 4 || id == 6))
+                {
+                    ship_o.next_special = id;
+                }
+                else
+                {
+                    js::GameObjects::get_item(ship_o, id);
+                }
+                item_o.isAlive = false;
             }
         }
 
@@ -200,7 +220,7 @@ int main()
                         break;
                     default:
                         // missiles are destroyed
-                        ship_o.special.reset();
+                        js::GameObjects::reset_special(ship_o);
                         break;
                 }
             }
@@ -221,7 +241,7 @@ int main()
                         break;
                     default:
                         // missiles are destroyed
-                        ship_o.special.reset();
+                        js::GameObjects::reset_special(ship_o);
                         break;
                 }
             }
@@ -242,7 +262,7 @@ int main()
                         break;
                     default:
                         // missiles are destroyed
-                        ship_o.special.reset();
+                        js::GameObjects::reset_special(ship_o);
                         break;
                 }
             }
@@ -263,7 +283,7 @@ int main()
                         break;
                     default:
                         // missiles are destroyed
-                        ship_o.special.reset();
+                        js::GameObjects::reset_special(ship_o);
                         break;
                 }
             }
@@ -297,8 +317,9 @@ int main()
                         ship_o.special_velocity.x *= -1;
                         break;
                     default:
-                        // missiles are destoryed
-                        ship_o.special.reset();
+                        // missiles are destroyed
+                        js::GameObjects::reset_special(ship_o);
+                        break;
                 }
             }
             else 
@@ -313,8 +334,9 @@ int main()
                         ship_o.special_velocity.y *= -1;
                         break;
                     default:
-                        // missiles are destoryed
-                        ship_o.special.reset();
+                        // missiles are destroyed
+                        js::GameObjects::reset_special(ship_o);
+                        break;
                 }
             }
         }
@@ -369,6 +391,14 @@ int main()
         // drawPoint(window, ship_o.ship_body.sprite.value().getPosition(), 10, sf::Color::Green);
         // drawBB(window, ship_o.ship_body, sf::Color::Green);
 
+        for (auto & item_o : room_o.items)
+        {
+            window.draw(item_o.sprite.value());
+            // drawPoint(window, item_o.sprite.value().getPosition(), 10, sf::Color::Green);
+
+            js::GameObjects::update_item(item_o, game_frame);
+        }
+
         for (auto & wall_o : room_o.walls)
         {
             window.draw(wall_o.sprite.value());
@@ -377,6 +407,16 @@ int main()
         }
 
         window.display();
+
+        // cleanup
+
+        for (std::vector<js::GameObjects::Animation>::iterator it = room_o.items.begin(); it != room_o.items.end();)
+        {
+            if ((*it).isAlive == false) 
+                it = room_o.items.erase(it);
+            else 
+                ++it;
+        }
 
         game_frame++;
     }
