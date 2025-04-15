@@ -20,8 +20,10 @@ struct Animation
 
 void create_animation(Animation & anim, const sf::Texture & tex, float fw, float fh, int fc = 1, int spd = 0)
 {
+    // frame size
     anim.size.x = fw;
     anim.size.y = fh;
+    // frame half-size
     anim.half_size.x = fw * 0.5f;
     anim.half_size.y = fh * 0.5f;
     anim.frame_count = fc;

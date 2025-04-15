@@ -72,6 +72,10 @@ struct Ship
     sf::Vector2f velocity;
     uint8_t shield;
     uint8_t fuel;
+
+    std::optional<Animation> cannon;
+    sf::Vector2f cannon_previous_position;
+    sf::Vector2f cannon_velocity;
     uint8_t cannon_ammo;
 
     std::optional<Animation> special;
@@ -101,11 +105,22 @@ void create_ship(Ship & ship, const sf::Vector2f & pos, const Assets & assets)
     ship.fuel = 100;
     ship.cannon_ammo = 100;
 
-    ship.special_type = SpecialType::STAR;
+    ship.special_type = SpecialType::MISSILE_SIDE;
     ship.special_ammo = 40;
 
     ship.thrust_up = false;
     ship.thrust_horiz = false;
+}
+
+#define FRICTION 0.7f
+#define GRAVITY 8.9f
+
+void move_ship(float dt, Ship & ship)
+{
+    ship.velocity.x -= FRICTION * ship.velocity.x * dt;
+    ship.velocity.y -= FRICTION * ship.velocity.y * dt;
+    ship.velocity.y += GRAVITY * dt;
+    ship.ship_body.sprite.value().move(ship.velocity);
 }
 
 void update_ship(Ship & ship)
@@ -142,6 +157,20 @@ void update_ship(Ship & ship)
     ship.ship_flame_back.sprite.value().setScale(ship.ship_body.sprite.value().getScale());
 }
 
+void create_cannon(Ship & ship, const Assets & assets)
+{
+    ship.cannon = std::make_optional<Animation>();
+    create_animation(ship.cannon.value(), assets.ship_cannon, assets.ship_cannon.getSize().x, assets.ship_cannon.getSize().y);
+    ship.cannon.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
+    ship.cannon_previous_position = ship.cannon.value().sprite.value().getPosition();
+    ship.cannon_velocity = {ship.ship_body.sprite.value().getScale().x * 600.0f, 0.0f};
+}
+
+void move_cannon(float dt, Ship & ship)
+{
+    ship.cannon.value().sprite.value().move({ship.cannon_velocity.x * dt, ship.cannon_velocity.y * dt});
+}
+
 void create_special(Ship & ship, const Assets & assets)
 {
     ship.special = std::make_optional<Animation>();
@@ -158,16 +187,7 @@ void create_special(Ship & ship, const Assets & assets)
                 assets.special_missile_side.getSize().x, assets.special_missile_side.getSize().y);
             ship.special.value().sprite.value().setScale(ship.ship_body.sprite.value().getScale());
             ship.special.value().sprite.value().setColor(sf::Color::Cyan);
-            if (ship.special.value().sprite.value().getScale().x < 0)
-            {
-                // to left
-                ship.special_velocity = {-100.0f, 200.0f};
-            }
-            else
-            {
-                // to right
-                ship.special_velocity = {100.0f, 200.0f};
-            }
+            ship.special_velocity = {ship.special.value().sprite.value().getScale().x * 100.0f, 200.0f};
             break;
 
         case MISSILE_DOWN:
@@ -208,18 +228,8 @@ void move_special(float dt, Ship & ship)
             {
                 force += {0.0f, -170.0f};
             }
-            if (ship.special.value().sprite.value().getScale().x < 0)
-            {
-                // to left
-                force += {-100.0f, 0.0f};
-                accel = -150.0f;
-            }
-            else
-            {
-                // to right
-                force += {100.0f, 0.0f};
-                accel = 150.0f;
-            }
+            force += {ship.special.value().sprite.value().getScale().x * 100.0f, 0.0f};
+            accel = ship.special.value().sprite.value().getScale().x * 150.0f;
             ship.special_velocity += force * dt;
             ship.special_velocity.x += accel * dt;
             ship.special.value().sprite.value().move({ship.special_velocity.x * dt, ship.special_velocity.y * dt});

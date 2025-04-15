@@ -21,8 +21,6 @@
 
 #define ACCEL_VERT 20.0f
 #define ACCEL_HORIZ 7.0f
-#define FRICTION 0.7f
-#define GRAVITY 8.9f
 
 int main()
 {
@@ -58,6 +56,10 @@ int main()
         // input
 
         ship_o.previous_position = ship_o.ship_body.sprite.value().getPosition();
+        if (ship_o.cannon.has_value())
+        {
+            ship_o.cannon_previous_position = ship_o.cannon.value().sprite.value().getPosition();
+        }
         if (ship_o.special.has_value()) 
         {
             ship_o.special_previous_position = ship_o.special.value().sprite.value().getPosition();
@@ -95,13 +97,22 @@ int main()
             ship_o.thrust_horiz = true;
         }
 
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+        {
+            if (!ship_o.cannon.has_value() && ship_o.cannon_ammo > 0)
+            {
+                ship_o.cannon_ammo--;
+                js::GameObjects::create_cannon(ship_o, assets);
+            }
+        }
+
         // update
 
-        ship_o.velocity.x -= FRICTION * ship_o.velocity.x * dtAsSeconds;
-        ship_o.velocity.y -= FRICTION * ship_o.velocity.y * dtAsSeconds;
-        ship_o.velocity.y += GRAVITY * dtAsSeconds;
-        ship_o.ship_body.sprite.value().move(ship_o.velocity);
-
+        js::GameObjects::move_ship(dtAsSeconds, ship_o);
+        if (ship_o.cannon.has_value())
+        {
+            js::GameObjects::move_cannon(dtAsSeconds, ship_o);
+        }
         if (ship_o.special.has_value())
         {
             js::GameObjects::move_special(dtAsSeconds, ship_o);
@@ -111,8 +122,9 @@ int main()
 
         for (auto & wall_o : room_o.walls)
         {
-            // ship vs. walls
             sf::Vector2f vec(0.0f, 0.0f);
+
+            // ship vs. walls
             if (checkCollision(ship_o.ship_body.sprite.value(), ship_o.ship_body.half_size, ship_o.previous_position, 
                                 wall_o.sprite.value(), wall_o.half_size, vec))
             {
@@ -125,6 +137,18 @@ int main()
                 if (vec.y != 0)
                 {
                     ship_o.velocity.y = 0;
+                }
+            }
+
+            // cannon vs. walls
+            if (ship_o.cannon.has_value())
+            {
+                vec.x = 0;
+                vec.y = 0;
+                if (checkCollision(ship_o.cannon.value().sprite.value(), ship_o.cannon.value().half_size, ship_o.cannon_previous_position, 
+                                    wall_o.sprite.value(), wall_o.half_size, vec))
+                {
+                    ship_o.cannon.reset();
                 }
             }
 
@@ -247,6 +271,18 @@ int main()
 
         js::GameObjects::update_ship(ship_o);
 
+        if (ship_o.cannon.has_value())
+        {
+            auto & c = ship_o.cannon.value();
+            if (c.sprite.value().getPosition().x < EDGE_LEFT + c.half_size.x ||
+                c.sprite.value().getPosition().x > EDGE_RIGHT - c.half_size.x ||
+                c.sprite.value().getPosition().y < EDGE_TOP + c.half_size.y ||
+                c.sprite.value().getPosition().y > EDGE_BOTTOM - c.half_size.y)
+            {
+                ship_o.cannon.reset();
+            }
+        }
+
         if (ship_o.special.has_value())
         {
             auto & spc = ship_o.special.value();
@@ -317,6 +353,10 @@ int main()
         {
             window.draw(ship_o.ship_flame_down_big.sprite.value());
             window.draw(ship_o.ship_flame_down_small.sprite.value());
+        }
+        if (ship_o.cannon.has_value())
+        {
+            window.draw(ship_o.cannon.value().sprite.value());
         }
         if (ship_o.special.has_value())
         {
