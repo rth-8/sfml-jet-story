@@ -136,14 +136,25 @@ int main()
                 if (checkCollision(ship_o.special.value().sprite.value(), ship_o.special.value().half_size, ship_o.special_previous_position, 
                                     wall_o.sprite.value(), wall_o.half_size, vec))
                 {
-                    ship_o.special.value().sprite.value().move(vec);
-                    if (vec.x != 0)
+                    switch (ship_o.special_type)
                     {
-                        ship_o.special_velocity.x *= -1;
-                    }
-                    if (vec.y != 0)
-                    {
-                        ship_o.special_velocity.y *= -1;
+                        case js::GameObjects::BALL:
+                        case js::GameObjects::STAR:
+                            // ball and star bounce of walls
+                            ship_o.special.value().sprite.value().move(vec);
+                            if (vec.x != 0)
+                            {
+                                ship_o.special_velocity.x *= -1;
+                            }
+                            if (vec.y != 0)
+                            {
+                                ship_o.special_velocity.y *= -1;
+                            }
+                            break;
+                        default:
+                            // missiles are destroyed
+                            ship_o.special.reset();
+                            break;
                     }
                 }
             }
@@ -154,9 +165,20 @@ int main()
             // std::cout << "NEXT ROOM: left\n";
             maze_o.current_room_col--;
             ship_o.ship_body.sprite.value().setPosition({EDGE_RIGHT - ship_o.ship_body.half_size.x, ship_o.ship_body.sprite.value().getPosition().y});
-            if (ship_o.special.has_value() && ship_o.special_type == js::GameObjects::BALL)
+            if (ship_o.special.has_value())
             {
-                ship_o.special.value().sprite.value().setPosition(ship_o.ship_body.sprite.value().getPosition());
+                switch (ship_o.special_type)
+                {
+                    case js::GameObjects::BALL:
+                    case js::GameObjects::STAR:
+                        // ball moves with ship to next room
+                        ship_o.special.value().sprite.value().setPosition(ship_o.ship_body.sprite.value().getPosition());
+                        break;
+                    default:
+                        // missiles are destroyed
+                        ship_o.special.reset();
+                        break;
+                }
             }
         }
         else if (ship_o.ship_body.sprite.value().getPosition().x > EDGE_RIGHT - ship_o.ship_body.half_size.x)
@@ -164,9 +186,20 @@ int main()
             // std::cout << "NEXT ROOM: right\n";
             maze_o.current_room_col++;
             ship_o.ship_body.sprite.value().setPosition({EDGE_LEFT + ship_o.ship_body.half_size.x, ship_o.ship_body.sprite.value().getPosition().y});
-            if (ship_o.special.has_value() && ship_o.special_type == js::GameObjects::BALL)
+            if (ship_o.special.has_value())
             {
-                ship_o.special.value().sprite.value().setPosition(ship_o.ship_body.sprite.value().getPosition());
+                switch (ship_o.special_type)
+                {
+                    case js::GameObjects::BALL:
+                    case js::GameObjects::STAR:
+                        // ball moves with ship to next room
+                        ship_o.special.value().sprite.value().setPosition(ship_o.ship_body.sprite.value().getPosition());
+                        break;
+                    default:
+                        // missiles are destroyed
+                        ship_o.special.reset();
+                        break;
+                }
             }
         }
         else if (ship_o.ship_body.sprite.value().getPosition().y < EDGE_TOP + ship_o.ship_body.half_size.y)
@@ -174,9 +207,20 @@ int main()
             // std::cout << "NEXT ROOM: up\n";
             maze_o.current_room_row--;
             ship_o.ship_body.sprite.value().setPosition({ship_o.ship_body.sprite.value().getPosition().x, EDGE_BOTTOM - ship_o.ship_body.half_size.y});
-            if (ship_o.special.has_value() && ship_o.special_type == js::GameObjects::BALL)
+            if (ship_o.special.has_value())
             {
-                ship_o.special.value().sprite.value().setPosition(ship_o.ship_body.sprite.value().getPosition());
+                switch (ship_o.special_type)
+                {
+                    case js::GameObjects::BALL:
+                    case js::GameObjects::STAR:
+                        // ball moves with ship to next room
+                        ship_o.special.value().sprite.value().setPosition(ship_o.ship_body.sprite.value().getPosition());
+                        break;
+                    default:
+                        // missiles are destroyed
+                        ship_o.special.reset();
+                        break;
+                }
             }
         }
         else if (ship_o.ship_body.sprite.value().getPosition().y > EDGE_BOTTOM - ship_o.ship_body.half_size.y)
@@ -184,9 +228,20 @@ int main()
             // std::cout << "NEXT ROOM: down\n";
             maze_o.current_room_row++;
             ship_o.ship_body.sprite.value().setPosition({ship_o.ship_body.sprite.value().getPosition().x, EDGE_TOP + ship_o.ship_body.half_size.y});
-            if (ship_o.special.has_value() && ship_o.special_type == js::GameObjects::BALL)
+            if (ship_o.special.has_value())
             {
-                ship_o.special.value().sprite.value().setPosition(ship_o.ship_body.sprite.value().getPosition());
+                switch (ship_o.special_type)
+                {
+                    case js::GameObjects::BALL:
+                    case js::GameObjects::STAR:
+                        // ball and star move with ship to next room
+                        ship_o.special.value().sprite.value().setPosition(ship_o.ship_body.sprite.value().getPosition());
+                        break;
+                    default:
+                        // missiles are destroyed
+                        ship_o.special.reset();
+                        break;
+                }
             }
         }
 
@@ -198,13 +253,33 @@ int main()
             if (spc.sprite.value().getPosition().x < EDGE_LEFT + spc.half_size.x ||
                 spc.sprite.value().getPosition().x > EDGE_RIGHT - spc.half_size.x)
             {
-                ship_o.special_velocity.x *= -1;
+                switch (ship_o.special_type)
+                {
+                    case js::GameObjects::BALL:
+                    case js::GameObjects::STAR:
+                        // ball and start bounce of screen bounds
+                        ship_o.special_velocity.x *= -1;
+                        break;
+                    default:
+                        // missiles are destoryed
+                        ship_o.special.reset();
+                }
             }
             else 
             if (spc.sprite.value().getPosition().y < EDGE_TOP + spc.half_size.y ||
                 spc.sprite.value().getPosition().y > EDGE_BOTTOM - spc.half_size.y)
             {
-                ship_o.special_velocity.y *= -1;
+                switch (ship_o.special_type)
+                {
+                    case js::GameObjects::BALL:
+                    case js::GameObjects::STAR:
+                        // ball and start bounce of screen bounds
+                        ship_o.special_velocity.y *= -1;
+                        break;
+                    default:
+                        // missiles are destoryed
+                        ship_o.special.reset();
+                }
             }
         }
 

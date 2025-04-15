@@ -60,6 +60,7 @@ enum SpecialType
 };
 
 #define SPECIAL_BALL_LIFESPAN 12
+#define SPECIAL_STAR_LIFESPAN 12
 
 struct Ship
 {
@@ -100,8 +101,8 @@ void create_ship(Ship & ship, const sf::Vector2f & pos, const Assets & assets)
     ship.fuel = 100;
     ship.cannon_ammo = 100;
 
-    ship.special_type = SpecialType::BALL;
-    ship.special_ammo = 4;
+    ship.special_type = SpecialType::STAR;
+    ship.special_ammo = 40;
 
     ship.thrust_up = false;
     ship.thrust_horiz = false;
@@ -143,26 +144,47 @@ void update_ship(Ship & ship)
 
 void create_special(Ship & ship, const Assets & assets)
 {
+    ship.special = std::make_optional<Animation>();
+    
     switch (ship.special_type)
     {
         case BALL:
-            ship.special = std::make_optional<Animation>();
             create_animation(ship.special.value(), assets.special_ball, assets.special_ball.getSize().x, assets.special_ball.getSize().y);
-            ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
-            ship.special_previous_position = ship.special.value().sprite.value().getPosition();
             ship.special_velocity = {250.0f, 250.0f};
-            ship.special_lifespan = 0;
             break;
 
         case MISSILE_SIDE:
+            create_animation(ship.special.value(), assets.special_missile_side, 
+                assets.special_missile_side.getSize().x, assets.special_missile_side.getSize().y);
+            ship.special.value().sprite.value().setScale(ship.ship_body.sprite.value().getScale());
+            ship.special.value().sprite.value().setColor(sf::Color::Cyan);
+            if (ship.special.value().sprite.value().getScale().x < 0)
+            {
+                // to left
+                ship.special_velocity = {-100.0f, 200.0f};
+            }
+            else
+            {
+                // to right
+                ship.special_velocity = {100.0f, 200.0f};
+            }
             break;
 
         case MISSILE_DOWN:
+            create_animation(ship.special.value(), assets.special_missile_down, 
+                assets.special_missile_down.getSize().x, assets.special_missile_down.getSize().y);
+            ship.special.value().sprite.value().setColor(sf::Color::Cyan);
+            ship.special_velocity = {ship.velocity.x * 20.0f, 300.0f};
             break;
 
         case STAR:
+            create_animation(ship.special.value(), assets.special_star, assets.special_star.getSize().x, assets.special_star.getSize().y);
             break;
     }
+
+    ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
+    ship.special_previous_position = ship.special.value().sprite.value().getPosition();
+    ship.special_lifespan = 0;
 }
 
 void move_special(float dt, Ship & ship)
@@ -179,13 +201,51 @@ void move_special(float dt, Ship & ship)
             break;
 
         case MISSILE_SIDE:
+        {
+            sf::Vector2f force{0.0f, 0.0f};
+            float accel = 0.0f;
+            if (ship.special_velocity.y < -10.0f || ship.special_velocity.y > 10.0f)
+            {
+                force += {0.0f, -170.0f};
+            }
+            if (ship.special.value().sprite.value().getScale().x < 0)
+            {
+                // to left
+                force += {-100.0f, 0.0f};
+                accel = -150.0f;
+            }
+            else
+            {
+                // to right
+                force += {100.0f, 0.0f};
+                accel = 150.0f;
+            }
+            ship.special_velocity += force * dt;
+            ship.special_velocity.x += accel * dt;
+            ship.special.value().sprite.value().move({ship.special_velocity.x * dt, ship.special_velocity.y * dt});
             break;
+        }
 
         case MISSILE_DOWN:
+            ship.special.value().sprite.value().move({ship.special_velocity.x * dt, ship.special_velocity.y * dt});
             break;
 
         case STAR:
+        {
+            sf::Vector2f force(-(ship.special.value().sprite.value().getPosition() - ship.ship_body.sprite.value().getPosition()));
+            if (force.length() > 0)
+            {
+                force = force.normalized() * 400.0f * dt;
+            }
+            ship.special_velocity += force;
+            ship.special.value().sprite.value().move({ship.special_velocity.x * dt, ship.special_velocity.y * dt});
+            ship.special_lifespan += dt;
+            if (ship.special_lifespan >= SPECIAL_BALL_LIFESPAN)
+            {
+                ship.special.reset();
+            }
             break;
+        }
     }
 }
 
