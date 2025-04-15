@@ -1,0 +1,51 @@
+#ifndef ANIMATION_H
+#define ANIMATION_H
+
+#include <iostream>
+#include <vector>
+#include <optional>
+
+namespace js {
+namespace GameObjects {
+
+struct Animation
+{
+    std::optional<sf::Sprite> sprite;
+    sf::Vector2f size;
+    sf::Vector2f half_size;
+    int frame_count;
+    int speed;
+    int frame;
+};
+
+void create_animation(Animation & anim, const sf::Texture & tex, float fw, float fh, int fc = 1, int spd = 0)
+{
+    anim.size.x = fw;
+    anim.size.y = fh;
+    anim.half_size.x = fw * 0.5f;
+    anim.half_size.y = fh * 0.5f;
+    anim.frame_count = fc;
+    anim.speed = spd;
+    anim.frame = 0;
+    anim.sprite = std::make_optional<sf::Sprite>(tex);
+    anim.sprite.value().setTextureRect(
+        sf::IntRect({anim.frame * static_cast<int>(anim.size.x), 0},
+                    {static_cast<int>(anim.size.x), static_cast<int>(anim.size.y)}));
+    anim.sprite.value().setOrigin(anim.half_size);
+}
+
+void animation_update(Animation & anim, int gFrame)
+{
+    if (anim.frame_count > 1 && anim.speed > 0 && gFrame > 0)
+    {
+        anim.frame = (gFrame / anim.speed) % anim.frame_count;
+        anim.sprite.value().setTextureRect(
+            sf::IntRect({anim.frame * static_cast<int>(anim.size.x), 0}, 
+                        {static_cast<int>(anim.size.x), static_cast<int>(anim.size.y)}));
+    }
+}
+
+} // namespace GameObjects
+} // namespace js
+
+#endif
