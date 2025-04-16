@@ -1,14 +1,11 @@
 #ifndef ASSETS_H
 #define ASSETS_H
 
-#include <SFML/Graphics.hpp>
-#include <vector>
-#include <format>
-
 struct Assets
 {
     std::vector<sf::Texture> walls;
     std::vector<sf::Texture> items;
+    std::vector<sf::Texture> enemies;
     sf::Texture ship;
     sf::Texture ship_flame_down_big;
     sf::Texture ship_flame_down_small;
@@ -38,6 +35,14 @@ void load_item_textures(Assets & assets)
     assets.items.push_back(sf::Texture("./images/items/item_shield.png"));  // 5
     assets.items.push_back(sf::Texture("./images/items/item_star.png"));    // 6
     assets.items.push_back(sf::Texture("./images/items/item_random.png"));  // 7
+}
+
+void load_enemy_textures(Assets & assets)
+{
+    for (int8_t i=0; i<22; ++i)
+    {
+        assets.enemies.push_back(sf::Texture(std::format("./images/enemies/enemy_{:02d}.png", i)));
+    }
 }
 
 void load_ship_textures(Assets & assets)

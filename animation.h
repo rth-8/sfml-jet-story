@@ -1,10 +1,6 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
 
-#include <iostream>
-#include <vector>
-#include <optional>
-
 namespace js {
 namespace GameObjects {
 
@@ -51,6 +47,14 @@ void animation_update(Animation & anim, int gFrame)
             sf::IntRect({anim.frame * static_cast<int>(anim.size.x), 0}, 
                         {static_cast<int>(anim.size.x), static_cast<int>(anim.size.y)}));
     }
+}
+
+void set_frame(Animation & anim, int aFrame)
+{
+    anim.frame = aFrame;
+    anim.sprite.value().setTextureRect(
+        sf::IntRect({anim.frame * static_cast<int>(anim.size.x), 0}, 
+                    {static_cast<int>(anim.size.x), static_cast<int>(anim.size.y)}));
 }
 
 } // namespace GameObjects

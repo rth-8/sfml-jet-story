@@ -2,6 +2,7 @@
 #include <ctime>
 #include <iostream>
 #include <vector>
+#include <optional>
 
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
@@ -11,6 +12,7 @@
 #include "assets.h"
 #include "maze.h"
 #include "animation.h"
+#include "enemies.h"
 #include "objects.h"
 #include "ship.h"
 #include "physics.h"
@@ -39,6 +41,7 @@ int main()
     load_wall_textures(assets);
     load_item_textures(assets);
     load_ship_textures(assets);
+    load_enemy_textures(assets);
     
     js::Data::Maze maze;
     js::Data::load_maze(maze);
@@ -354,6 +357,18 @@ int main()
             js::GameObjects::animation_update(ship_o.ship_flame_down_small, game_frame);
         }
 
+        for (auto & enemy_o : room_o.enemies)
+        {
+            if (enemy_o.anim.sprite.has_value())
+            {
+                js::GameObjects::animation_update(enemy_o.anim, game_frame);
+                if (enemy_o.carried_enemy.has_value())
+                {
+                    js::GameObjects::animation_update(enemy_o.carried_enemy.value(), game_frame);
+                }
+            }
+        }
+
         // SFML events
         while (const std::optional event = window.pollEvent())
         {
@@ -396,8 +411,24 @@ int main()
         {
             window.draw(item_o.sprite.value());
             // drawPoint(window, item_o.sprite.value().getPosition(), 10, sf::Color::Green);
-
             js::GameObjects::update_item(item_o, game_frame);
+        }
+
+        for (auto & enemy_o : room_o.enemies)
+        {
+            if (enemy_o.anim.sprite.has_value())
+            {
+                window.draw(enemy_o.anim.sprite.value());
+                if (enemy_o.carried_enemy.has_value())
+                {
+                    window.draw(enemy_o.carried_enemy.value().sprite.value());
+                }
+                if (enemy_o.carried_item.has_value())
+                {
+                    window.draw(enemy_o.carried_item.value().sprite.value());
+                    js::GameObjects::update_item(enemy_o.carried_item.value(), game_frame);
+                }
+            }
         }
 
         for (auto & wall_o : room_o.walls)

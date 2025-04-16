@@ -1,10 +1,6 @@
 #ifndef OBJECTS_H
 #define OBJECTS_H
 
-#include <iostream>
-#include <vector>
-#include <optional>
-
 namespace js {
 namespace GameObjects {
 
@@ -12,6 +8,7 @@ struct Room
 {
     std::vector<Animation> walls;
     std::vector<Animation> items;
+    std::vector<Enemy> enemies;
 };
 
 struct Maze
@@ -48,6 +45,13 @@ void create_room(Room & ro, const js::Data::Room & room, const Assets & assets)
         anim.color_index = 0;
 
         ro.items.push_back(anim);
+    }
+
+    for (int i=0; i<room.enemies.size(); ++i)
+    {
+        Enemy eo;
+        create_enemy(eo, room.enemies[i], assets);
+        ro.enemies.push_back(eo);
     }
 }
 
