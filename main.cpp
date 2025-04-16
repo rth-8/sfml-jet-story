@@ -12,6 +12,7 @@
 #include "maze.h"
 #include "animation.h"
 #include "objects.h"
+#include "ship.h"
 #include "physics.h"
 #include "debug_draw.h"
 
