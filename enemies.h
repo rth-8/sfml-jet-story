@@ -217,7 +217,7 @@ void move_enemy_constant(Enemy & enemy, float dt)
     enemy.anim.sprite.value().move(enemy.velocity * dt);
 }
 
-void move_enemy_carried_element(Enemy & enemy)
+void move_enemy_carried_element(Enemy & enemy, const Ship & ship)
 {
     if (enemy.carried_enemy.has_value())
     {
@@ -225,6 +225,18 @@ void move_enemy_carried_element(Enemy & enemy)
             enemy.anim.sprite.value().getPosition().x,
             enemy.anim.sprite.value().getPosition().y - enemy.anim.half_size.y - enemy.carried_enemy.value().half_size.y - ENEMY_CARRIED_GAP
         });
+
+        if (enemy.carried_enemy.value().id == 3)
+        {
+            if (ship.ship_body.sprite.value().getPosition().x < enemy.carried_enemy.value().sprite.value().getPosition().x)
+            {
+                enemy.carried_enemy.value().sprite.value().setScale({-1.0, 1.0});
+            }
+            else
+            {
+                enemy.carried_enemy.value().sprite.value().setScale({1.0, 1.0});
+            }
+        }
     }
     else
     if (enemy.carried_item.has_value())
@@ -300,7 +312,7 @@ void move_enemy(Enemy & enemy, const Ship & ship, float dt, int gFrame)
             break;
         case 20:
             move_enemy_random(enemy, dt, gFrame);
-            move_enemy_carried_element(enemy);
+            move_enemy_carried_element(enemy, ship);
             break;
     }
 }

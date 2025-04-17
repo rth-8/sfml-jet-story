@@ -250,6 +250,30 @@ int main()
                     enemy_o.anim.sprite.value().setPosition({enemy_o.anim.sprite.value().getPosition().x, EDGE_BOTTOM - enemy_o.anim.half_size.y});
                     enemy_o.velocity.y *= -1;
                 }
+
+                if (enemy_o.carried_enemy.has_value())
+                {
+                    auto e_pos = js::GameObjects::enemy_get_position(enemy_o);
+                    auto e_hs = js::GameObjects::enemy_get_half_size(enemy_o);
+                    if (e_pos.y < EDGE_TOP + e_hs.y)
+                    {
+                        enemy_o.anim.sprite.value().move({0.0f, abs(e_pos.y - e_hs.y - EDGE_TOP)});
+                        enemy_o.carried_enemy.value().sprite.value().move({0.0f, abs(e_pos.y - e_hs.y - EDGE_TOP)});
+                        enemy_o.velocity.y *= -1;
+                    }
+                }
+                else
+                if (enemy_o.carried_item.has_value())
+                {
+                    auto e_pos = js::GameObjects::enemy_get_position(enemy_o);
+                    auto e_hs = js::GameObjects::enemy_get_half_size(enemy_o);
+                    if (e_pos.y < EDGE_TOP + e_hs.y)
+                    {
+                        enemy_o.anim.sprite.value().move({0.0f, abs(e_pos.y - e_hs.y - EDGE_TOP)});
+                        enemy_o.carried_item.value().sprite.value().move({0.0f, abs(e_pos.y - e_hs.y - EDGE_TOP)});
+                        enemy_o.velocity.y *= -1;
+                    }
+                }
             }
         } // walls collisions
 
