@@ -70,6 +70,7 @@ int main()
         {
             ship_o.special_previous_position = ship_o.special.value().sprite.value().getPosition();
         }
+
         ship_o.thrust_up = false;
         ship_o.thrust_horiz = false;
 
@@ -112,11 +113,6 @@ int main()
             }
         }
 
-        for (auto & enemy_o : room_o.enemies)
-        {
-            js::GameObjects::move_enemy(enemy_o, ship_o, dtAsSeconds, game_frame);
-        }
-
         // update
 
         js::GameObjects::move_ship(dtAsSeconds, ship_o);
@@ -129,6 +125,11 @@ int main()
             js::GameObjects::move_special(dtAsSeconds, ship_o);
         }
 
+        for (auto & enemy_o : room_o.enemies)
+        {
+            js::GameObjects::move_enemy(enemy_o, ship_o, dtAsSeconds, game_frame);
+        }
+
         // collisions
 
         for (auto & wall_o : room_o.walls)
@@ -136,8 +137,9 @@ int main()
             sf::Vector2f vec(0.0f, 0.0f);
 
             // ship vs. walls
-            if (checkCollision(ship_o.ship_body.sprite.value(), ship_o.ship_body.half_size, ship_o.previous_position, 
-                                wall_o.sprite.value(), wall_o.half_size, vec))
+            if (checkCollision(ship_o.ship_body.sprite.value().getPosition(), ship_o.ship_body.half_size, ship_o.previous_position, 
+                                wall_o.sprite.value().getPosition(), wall_o.half_size, 
+                                vec))
             {
                 // resolution
                 ship_o.ship_body.sprite.value().move(vec);
@@ -165,8 +167,9 @@ int main()
             {
                 vec.x = 0;
                 vec.y = 0;
-                if (checkCollision(ship_o.special.value().sprite.value(), ship_o.special.value().half_size, ship_o.special_previous_position, 
-                                    wall_o.sprite.value(), wall_o.half_size, vec))
+                if (checkCollision(ship_o.special.value().sprite.value().getPosition(), ship_o.special.value().half_size, ship_o.special_previous_position, 
+                                    wall_o.sprite.value().getPosition(), wall_o.half_size, 
+                                    vec))
                 {
                     switch (ship_o.special_type)
                     {
@@ -196,10 +199,23 @@ int main()
             {
                 vec.x = 0;
                 vec.y = 0;
-                if (checkCollision(enemy_o.anim.sprite.value(), enemy_o.anim.half_size, enemy_o.previous_position, 
-                                    wall_o.sprite.value(), wall_o.half_size, vec))
+                auto e_pos = js::GameObjects::enemy_get_position(enemy_o);
+                auto e_hs = js::GameObjects::enemy_get_half_size(enemy_o);
+                if (checkCollision(e_pos, e_hs, enemy_o.previous_position, 
+                                    wall_o.sprite.value().getPosition(), wall_o.half_size, 
+                                    vec))
                 {
                     enemy_o.anim.sprite.value().move(vec);
+                    if (enemy_o.carried_enemy.has_value())
+                    {
+                        enemy_o.carried_enemy.value().sprite.value().move(vec);
+                    }
+                    else
+                    if (enemy_o.carried_item.has_value())
+                    {
+                        enemy_o.carried_item.value().sprite.value().move(vec);
+                    }
+
                     if (enemy_o.anim.id == 15 || enemy_o.anim.id == 16)
                     {
                         if (vec.x != 0)
@@ -454,13 +470,10 @@ int main()
             }
             window.draw(ship_o.special.value().sprite.value());
         }
-        // drawPoint(window, ship_o.ship_body.sprite.value().getPosition(), 10, sf::Color::Green);
-        // drawBB(window, ship_o.ship_body, sf::Color::Green);
 
         for (auto & item_o : room_o.items)
         {
             window.draw(item_o.sprite.value());
-            // drawPoint(window, item_o.sprite.value().getPosition(), 10, sf::Color::Green);
             js::GameObjects::update_item(item_o, game_frame);
         }
 
@@ -479,13 +492,16 @@ int main()
                     js::GameObjects::update_item(enemy_o.carried_item.value(), game_frame);
                 }
             }
+
+            auto pos = js::GameObjects::enemy_get_position(enemy_o);
+            auto size = js::GameObjects::enemy_get_size(enemy_o);
+            auto hs = js::GameObjects::enemy_get_half_size(enemy_o);
+            drawBB(window, pos, size, hs, sf::Color::Green);
         }
 
         for (auto & wall_o : room_o.walls)
         {
             window.draw(wall_o.sprite.value());
-            // drawPoint(window, wall_o.sprite.value().getPosition(), 10, sf::Color::Green);
-            // drawBB(window, wall_o, sf::Color::Green);
         }
 
         window.display();

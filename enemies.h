@@ -33,6 +33,8 @@ const std::set<int> non_animated{0, 1, 2, 3, 4, 5, 6, 8, 11, 18};
 21  carrier                 moving
 */
 
+#define ENEMY_CARRIED_GAP 2
+
 struct Enemy
 {
     Animation anim;
@@ -41,6 +43,60 @@ struct Enemy
     sf::Vector2f previous_position;
     sf::Vector2f velocity;
 };
+
+sf::Vector2f enemy_get_size(Enemy & enemy)
+{
+    if (enemy.carried_enemy.has_value())
+    {
+        return { 
+            enemy.anim.size.x,
+            enemy.anim.size.y + enemy.carried_enemy.value().size.y + ENEMY_CARRIED_GAP
+            };
+    }
+    else
+    if (enemy.carried_item.has_value())
+    {
+        return { 
+            enemy.anim.size.x,
+            enemy.anim.size.y + enemy.carried_item.value().size.y + ENEMY_CARRIED_GAP
+            };
+    }
+    else
+    {
+        return sf::Vector2f(enemy.anim.size);
+    }
+}
+
+sf::Vector2f enemy_get_half_size(Enemy & enemy)
+{
+    auto size = enemy_get_size(enemy);
+    return { size.x * 0.5f, size.y * 0.5f };
+}
+
+sf::Vector2f enemy_get_position(Enemy & enemy)
+{
+    if (enemy.carried_enemy.has_value())
+    {
+        float h = enemy.anim.sprite.value().getPosition().y - enemy.carried_enemy.value().sprite.value().getPosition().y;
+        return { 
+            enemy.anim.sprite.value().getPosition().x, 
+            enemy.anim.sprite.value().getPosition().y - h*0.5f
+            };
+    }
+    else
+    if (enemy.carried_item.has_value())
+    {
+        float h = enemy.anim.sprite.value().getPosition().y - enemy.carried_item.value().sprite.value().getPosition().y;
+        return { 
+            enemy.anim.sprite.value().getPosition().x, 
+            enemy.anim.sprite.value().getPosition().y - h*0.5f
+            };
+    }
+    else
+    {
+        return sf::Vector2f(enemy.anim.sprite.value().getPosition());
+    }
+}
 
 void create_enemy_anim(Animation & anim, const int & id, const int & subid, const Assets & assets)
 {
@@ -167,7 +223,7 @@ void move_enemy_carried_element(Enemy & enemy)
     {
         enemy.carried_enemy.value().sprite.value().setPosition({
             enemy.anim.sprite.value().getPosition().x,
-            enemy.anim.sprite.value().getPosition().y - enemy.anim.half_size.y - enemy.carried_enemy.value().half_size.y - 2
+            enemy.anim.sprite.value().getPosition().y - enemy.anim.half_size.y - enemy.carried_enemy.value().half_size.y - ENEMY_CARRIED_GAP
         });
     }
     else
@@ -175,7 +231,7 @@ void move_enemy_carried_element(Enemy & enemy)
     {
         enemy.carried_item.value().sprite.value().setPosition({
             enemy.anim.sprite.value().getPosition().x,
-            enemy.anim.sprite.value().getPosition().y - enemy.anim.half_size.y - enemy.carried_item.value().half_size.y
+            enemy.anim.sprite.value().getPosition().y - enemy.anim.half_size.y - enemy.carried_item.value().half_size.y - ENEMY_CARRIED_GAP
         });
     }
 }
@@ -197,7 +253,7 @@ void shooting_tracking(Enemy & enemy, const Ship & ship, float dt, int gFrame)
 
 void move_enemy(Enemy & enemy, const Ship & ship, float dt, int gFrame)
 {
-    enemy.previous_position = enemy.anim.sprite.value().getPosition();
+    enemy.previous_position = enemy_get_position(enemy);
 
     switch (enemy.anim.id)
     {
