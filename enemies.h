@@ -8,11 +8,38 @@ namespace GameObjects {
 
 const std::set<int> non_animated{0, 1, 2, 3, 4, 5, 6, 8, 11, 18};
 
+/*
+0   base                    not moving
+1   dish                    not moving      shot - horizontal
+2   rod                     not moving      shot - tracking
+3   tank                    mirror          shot - horizontal
+4   barrier                 not moving
+5   missile launcher (up)   not moving      shot - vertical up
+6   bomb launcher (down)    not moving      shot - vertical down
+7   tesla                   not moving      shot - tracking
+8   missile                 not moving      shot - diagonal
+9   missile launcher        not moving      shot - horizontal
+10  spawner                 not moving
+11  drone                   moving
+12  bolt drone              moving
+13  tank drone              moving          shot - horizontal
+14  fighter                 moving
+15  rotating drone          moving
+16  small ball              moving
+17  drone                   moving
+18  big ball                moving
+19  hoovercraft             moving
+20  carrier                 moving
+21  carrier                 moving
+*/
+
 struct Enemy
 {
     Animation anim;
     std::optional<Animation> carried_enemy;
     std::optional<Animation> carried_item;
+    sf::Vector2f previous_position;
+    sf::Vector2f velocity;
 };
 
 void create_enemy_anim(Animation & anim, const int & id, const int & subid, const Assets & assets)
@@ -55,6 +82,11 @@ void create_enemy(Enemy & eo, const js::Data::Enemy & enemy, const Assets & asse
             eo.anim.sprite.value().setScale({-1.0f, 1.0f});
         }
 
+        if (enemy.id == 15 || enemy.id == 16)
+        {
+            eo.velocity = {200.0f, 200.0f};
+        }
+
         // random zx color from bright range (8-15), but skip black (8)
         eo.anim.color_index = std::rand()%7+9;
         eo.anim.sprite.value().setColor(zx_colors[eo.anim.color_index]);
@@ -88,6 +120,132 @@ void create_enemy(Enemy & eo, const js::Data::Enemy & enemy, const Assets & asse
             {static_cast<float>(enemy.carried_item.value().x) + eo.carried_item.value().half_size.x, 
              static_cast<float>(enemy.carried_item.value().y) + eo.carried_item.value().half_size.y + 100 + 6});
         eo.carried_item.value().color_index = 0;
+    }
+}
+
+void move_enemy_mirror(Enemy & enemy, const Ship & ship)
+{
+    if (ship.ship_body.sprite.value().getPosition().x < enemy.anim.sprite.value().getPosition().x)
+    {
+        enemy.anim.sprite.value().setScale({-1.0, 1.0});
+    }
+    else
+    {
+        enemy.anim.sprite.value().setScale({1.0, 1.0});
+    }
+}
+
+void move_enemy_random_vertical_tracking(Enemy & enemy, const Ship & ship, float dt, int gFrame)
+{
+    if (gFrame % 10 == 0)
+    {
+        enemy.velocity += {std::rand()%300 - 150.0f, std::rand()%300 - 150.0f};
+        enemy.velocity += {0.0f, enemy.anim.sprite.value().getPosition().y - ship.ship_body.sprite.value().getPosition().y};
+        enemy.velocity *= dt * -1.0f;
+    }
+    enemy.anim.sprite.value().move(enemy.velocity);
+}
+
+void move_enemy_random(Enemy & enemy, float dt, int gFrame)
+{
+    if (gFrame % 20 == 0)
+    {
+        enemy.velocity += {std::rand()%300 - 150.0f, std::rand()%300 - 150.0f};
+        enemy.velocity *= dt;
+    }
+    enemy.anim.sprite.value().move(enemy.velocity);
+}
+
+void move_enemy_constant(Enemy & enemy, float dt)
+{
+    enemy.anim.sprite.value().move(enemy.velocity * dt);
+}
+
+void move_enemy_carried_element(Enemy & enemy)
+{
+    if (enemy.carried_enemy.has_value())
+    {
+        enemy.carried_enemy.value().sprite.value().setPosition({
+            enemy.anim.sprite.value().getPosition().x,
+            enemy.anim.sprite.value().getPosition().y - enemy.anim.half_size.y - enemy.carried_enemy.value().half_size.y - 2
+        });
+    }
+    else
+    if (enemy.carried_item.has_value())
+    {
+        enemy.carried_item.value().sprite.value().setPosition({
+            enemy.anim.sprite.value().getPosition().x,
+            enemy.anim.sprite.value().getPosition().y - enemy.anim.half_size.y - enemy.carried_item.value().half_size.y
+        });
+    }
+}
+
+void shooting_horizontal(Enemy & enemy, const Ship & ship, float dt, int gFrame)
+{
+
+}
+
+void shooting_vertical(Enemy & enemy, const Ship & ship, float dt, int gFrame)
+{
+
+}
+
+void shooting_tracking(Enemy & enemy, const Ship & ship, float dt, int gFrame)
+{
+
+}
+
+void move_enemy(Enemy & enemy, const Ship & ship, float dt, int gFrame)
+{
+    enemy.previous_position = enemy.anim.sprite.value().getPosition();
+
+    switch (enemy.anim.id)
+    {
+        case 1:
+            shooting_horizontal(enemy, ship, dt, gFrame); 
+            break;
+        case 2:
+            shooting_tracking(enemy, ship, dt, gFrame); 
+            break;
+        case 3:
+            move_enemy_mirror(enemy, ship);
+            shooting_horizontal(enemy, ship, dt, gFrame); 
+            break;
+        case 7:
+            shooting_tracking(enemy, ship, dt, gFrame); 
+            break;
+        case 11:
+            move_enemy_mirror(enemy, ship);
+            move_enemy_random_vertical_tracking(enemy, ship, dt, gFrame); 
+            break;
+        case 12: 
+            move_enemy_random(enemy, dt, gFrame); 
+            break;
+        case 13: 
+            move_enemy_mirror(enemy, ship);
+            move_enemy_random_vertical_tracking(enemy, ship, dt, gFrame);
+            shooting_horizontal(enemy, ship, dt, gFrame);
+            break;
+        case 14: 
+            move_enemy_mirror(enemy, ship);
+            move_enemy_random_vertical_tracking(enemy, ship, dt, gFrame); 
+            break;
+        case 15:
+        case 16:
+            move_enemy_constant(enemy, dt); 
+            break;
+        case 17:
+            move_enemy_mirror(enemy, ship);
+            move_enemy_random_vertical_tracking(enemy, ship, dt, gFrame);
+            break;
+        case 18:
+        case 19:
+            move_enemy_random(enemy, dt, gFrame);
+            break;
+        case 20:
+            move_enemy_random(enemy, dt, gFrame);
+            move_enemy_carried_element(enemy);
+            break;
     }
 }
 

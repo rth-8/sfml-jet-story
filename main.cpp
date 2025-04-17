@@ -12,9 +12,9 @@
 #include "assets.h"
 #include "maze.h"
 #include "animation.h"
+#include "ship.h"
 #include "enemies.h"
 #include "objects.h"
-#include "ship.h"
 #include "physics.h"
 #include "debug_draw.h"
 
@@ -112,6 +112,11 @@ int main()
             }
         }
 
+        for (auto & enemy_o : room_o.enemies)
+        {
+            js::GameObjects::move_enemy(enemy_o, ship_o, dtAsSeconds, game_frame);
+        }
+
         // update
 
         js::GameObjects::move_ship(dtAsSeconds, ship_o);
@@ -183,6 +188,51 @@ int main()
                             js::GameObjects::reset_special(ship_o);
                             break;
                     }
+                }
+            }
+
+            // enemies vs. walls
+            for (auto & enemy_o : room_o.enemies)
+            {
+                vec.x = 0;
+                vec.y = 0;
+                if (checkCollision(enemy_o.anim.sprite.value(), enemy_o.anim.half_size, enemy_o.previous_position, 
+                                    wall_o.sprite.value(), wall_o.half_size, vec))
+                {
+                    enemy_o.anim.sprite.value().move(vec);
+                    if (enemy_o.anim.id == 15 || enemy_o.anim.id == 16)
+                    {
+                        if (vec.x != 0)
+                        {
+                            enemy_o.velocity.x *= -1;
+                        }
+                        if (vec.y != 0)
+                        {
+                            enemy_o.velocity.y *= -1;
+                        }
+                    }
+                }
+
+                // screen bounds
+                if (enemy_o.anim.sprite.value().getPosition().x < EDGE_LEFT + enemy_o.anim.half_size.x)
+                {
+                    enemy_o.anim.sprite.value().setPosition({EDGE_LEFT + enemy_o.anim.half_size.x, enemy_o.anim.sprite.value().getPosition().y});
+                    enemy_o.velocity.x *= -1;
+                }
+                if (enemy_o.anim.sprite.value().getPosition().x > EDGE_RIGHT - enemy_o.anim.half_size.x)
+                {
+                    enemy_o.anim.sprite.value().setPosition({EDGE_RIGHT - enemy_o.anim.half_size.x, enemy_o.anim.sprite.value().getPosition().y});
+                    enemy_o.velocity.x *= -1;
+                } 
+                if (enemy_o.anim.sprite.value().getPosition().y < EDGE_TOP + enemy_o.anim.half_size.y)
+                {
+                    enemy_o.anim.sprite.value().setPosition({enemy_o.anim.sprite.value().getPosition().x, EDGE_TOP + enemy_o.anim.half_size.y});
+                    enemy_o.velocity.y *= -1;
+                }
+                if (enemy_o.anim.sprite.value().getPosition().y > EDGE_BOTTOM - enemy_o.anim.half_size.y)
+                {
+                    enemy_o.anim.sprite.value().setPosition({enemy_o.anim.sprite.value().getPosition().x, EDGE_BOTTOM - enemy_o.anim.half_size.y});
+                    enemy_o.velocity.y *= -1;
                 }
             }
         } // walls collisions
