@@ -1,5 +1,5 @@
 build:
-	c++ main.cpp -o js.exe -std=c++20 -O0 -ggdb -IC:/SFML-3.0.0/include -LC:/SFML-3.0.0/lib -lsfml-graphics -lsfml-window -lsfml-system
+	c++ main.cpp -o js.exe -std=c++20 -O0 -ggdb -IC:/SFML-3.0.0/include -LC:/SFML-3.0.0/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
 
 run:
 	js.exe

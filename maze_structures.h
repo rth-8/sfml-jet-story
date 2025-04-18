@@ -8,6 +8,8 @@ typedef struct
     std::optional<Animation> carried_item;
     sf::Vector2f previous_position;
     sf::Vector2f velocity;
+    int health;
+    int carried_enemy_health;
 }
 Enemy;
 
@@ -45,6 +47,7 @@ typedef struct
     sf::Vector2f velocity;
     int shield;
     int fuel;
+    int damage_delay;
 
     std::optional<Animation> cannon;
     sf::Vector2f cannon_previous_position;

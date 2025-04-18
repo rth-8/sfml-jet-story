@@ -7,6 +7,8 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Vector2.hpp>
+#include <SFML/Audio/SoundBuffer.hpp>
+#include <SFML/Audio/Sound.hpp>
 
 #define EDGE_TOP 100
 #define EDGE_BOTTOM 600
@@ -18,6 +20,7 @@
 
 #include "zx_colors.h"
 #include "assets.h"
+#include "sounds.h"
 #include "maze_data.h"
 #include "animation.h"
 #include "maze_structures.h"
@@ -43,6 +46,7 @@ int main()
     load_item_textures(assets);
     load_ship_textures(assets);
     load_enemy_textures(assets);
+    load_sounds(assets);
     
     MazeData maze;
     load_maze(maze);
@@ -52,6 +56,8 @@ int main()
     
     Ship ship_o;
     create_ship(ship_o, {200,310}, assets);
+
+    create_sounds(assets);
 
     while (window.isOpen())
     {
@@ -154,9 +160,26 @@ int main()
         cannon_check_bounds(ship_o);
         special_check_bounds(ship_o);
 
+        bool anyCollision = false;
         for (auto & enemy_o : room_o.enemies)
         {
+            if (collision_enemy_ship(enemy_o, ship_o))
+            {
+                anyCollision = true;
+            }
+            if (ship_o.cannon.has_value())
+            {
+                collision_enemy_cannon(enemy_o, ship_o);
+            }
+            if (ship_o.special.has_value())
+            {
+                collision_enemy_special(enemy_o, ship_o);
+            }
             enemy_check_bounds(enemy_o);
+        }
+        if (!anyCollision)
+        {
+            sound_ship_damage.value().stop();
         }
 
         // animations

@@ -1,6 +1,15 @@
 #ifndef ASSETS_H
 #define ASSETS_H
 
+#include <map>
+
+enum SoundTypes
+{
+    DAMAGE,
+    HIT,
+    BOOM,
+};
+
 struct Assets
 {
     std::vector<sf::Texture> walls;
@@ -15,6 +24,8 @@ struct Assets
     sf::Texture special_missile_side;
     sf::Texture special_missile_down;
     sf::Texture special_star;
+
+    std::map<SoundTypes, sf::SoundBuffer> sounds;
 };
 
 void load_wall_textures(Assets & assets)
@@ -56,6 +67,13 @@ void load_ship_textures(Assets & assets)
     if (!assets.special_missile_side.loadFromFile("./images/ship/missile_side.png")) std::cerr << "Failed to load missile_side.png!";
     if (!assets.special_missile_down.loadFromFile("./images/ship/missile_down.png")) std::cerr << "Failed to load missile_down.png!";
     if (!assets.special_star.loadFromFile("./images/ship/star.png")) std::cerr << "Failed to load star.png!";
+}
+
+void load_sounds(Assets & assets)
+{
+    assets.sounds.insert({DAMAGE, sf::SoundBuffer("./sounds/damage.wav")});
+    assets.sounds.insert({HIT, sf::SoundBuffer("./sounds/enemy_damage.wav")});
+    assets.sounds.insert({BOOM, sf::SoundBuffer("./sounds/boom.wav")});
 }
 
 #endif

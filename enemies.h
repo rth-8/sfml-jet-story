@@ -31,6 +31,7 @@
 #define ENEMY_CARRIED_GAP 2
 
 const std::set<int> non_animated{0, 1, 2, 3, 4, 5, 6, 8, 11, 18};
+const std::array<int, 21> healths{200, 60, 90, 30, 200, 90, 90, 90, 20, 90, 90, 10, 10, 10, 10, 10, 10, 10, 50, 50, 10};
 
 sf::Vector2f enemy_get_size(Enemy & enemy)
 {
@@ -164,6 +165,12 @@ void create_enemy(Enemy & eo, const EnemyData & enemy, const Assets & assets)
             {static_cast<float>(enemy.carried_item.value().x) + eo.carried_item.value().half_size.x, 
              static_cast<float>(enemy.carried_item.value().y) + eo.carried_item.value().half_size.y + 100 + 6});
         eo.carried_item.value().color_index = 0;
+    }
+
+    eo.health = healths[eo.anim.id];
+    if (enemy.carried_enemy.has_value())
+    {
+        eo.carried_enemy_health = healths[enemy.carried_enemy.value().id];
     }
 }
 
@@ -337,6 +344,126 @@ void collision_enemy_wall(Enemy & enemy, Animation & wall)
             {
                 enemy.velocity.y *= -1;
             }
+        }
+    }
+}
+
+bool collision_enemy_ship(Enemy & enemy, Ship & ship)
+{
+    bool result = false;
+
+    if (checkCollision(enemy.anim, ship.ship_body))
+    {
+        if (ship.damage_delay == 0)
+        {
+            ship.shield -= 10;
+            enemy.health -= 10;
+            sound_ship_damage.value().play();
+            if (enemy.health <= 0)
+            {
+                sound_ship_damage.value().stop();
+                sound_boom.value().play();
+                enemy.anim.isAlive = false;
+            }
+            else
+            {
+                ship.damage_delay = 10;
+            }
+        }
+        else
+        {
+            ship.damage_delay--;
+        }
+
+        result = true;
+    }
+
+    if (enemy.anim.isAlive == true && enemy.carried_enemy.has_value())
+    {
+        if (checkCollision(enemy.carried_enemy.value(), ship.ship_body))
+        {
+            if (ship.damage_delay == 0)
+            {
+                ship.shield -= 10;
+                enemy.carried_enemy_health -= 10;
+                sound_ship_damage.value().play();
+                if (enemy.carried_enemy_health <= 0)
+                {
+                    sound_ship_damage.value().stop();
+                    sound_boom.value().play();
+                    enemy.carried_enemy.reset();
+                }
+                else
+                {
+                    ship.damage_delay = 10;
+                }
+            }
+            else
+            {
+                ship.damage_delay--;
+            }
+
+            result = true;
+        }
+    }
+
+    return result;
+}
+
+void collision_enemy_cannon(Enemy & enemy, Ship & ship)
+{
+    if (checkCollision(enemy.anim, ship.cannon.value()))
+    {
+        enemy.health -= 10;
+        ship.cannon.reset();
+        sound_hit.value().play();
+        if (enemy.health <= 0)
+        {
+            sound_boom.value().play();
+            enemy.anim.isAlive = false;
+        }
+    }
+
+    if (enemy.anim.isAlive == true && enemy.carried_enemy.has_value())
+    {
+        if (checkCollision(enemy.carried_enemy.value(), ship.cannon.value()))
+        {
+            enemy.carried_enemy_health -= 10;
+            ship.cannon.reset();
+            sound_hit.value().play();
+            if (enemy.carried_enemy_health <= 0)
+            {
+                sound_boom.value().play();
+                enemy.carried_enemy.reset();
+            }
+        }
+    }
+}
+
+void collision_enemy_special(Enemy & enemy, Ship & ship)
+{
+    if (checkCollision(enemy.anim, ship.special.value()))
+    {
+        enemy.health = 0;
+        if (ship.special_type == MISSILE_SIDE || ship.special_type == MISSILE_DOWN)
+        {
+            ship.special.reset();
+        }
+        sound_boom.value().play();
+        enemy.anim.isAlive = false;
+    }
+
+    if (enemy.anim.isAlive == true && enemy.carried_enemy.has_value())
+    {
+        if (checkCollision(enemy.carried_enemy.value(), ship.special.value()))
+        {
+            enemy.carried_enemy_health = 0;
+            if (ship.special_type == MISSILE_SIDE || ship.special_type == MISSILE_DOWN)
+            {
+                ship.special.reset();
+            }
+            sound_boom.value().play();
+            enemy.carried_enemy.reset();
         }
     }
 }

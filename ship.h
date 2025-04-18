@@ -24,6 +24,8 @@ void create_ship(Ship & ship, const sf::Vector2f & pos, const Assets & assets)
 
     ship.shield = HEALTH_MAX;
     ship.fuel = FUEL_MAX;
+    ship.damage_delay = 0;
+    
     ship.cannon_ammo = AMMO_MAX;
 
     ship.special_type = SpecialType::BALL;
