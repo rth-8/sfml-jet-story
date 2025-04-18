@@ -1,47 +1,10 @@
 #ifndef SHIP_H
 #define SHIP_H
 
-namespace js {
-namespace GameObjects {
-
-enum SpecialType
-{
-    BALL,
-    MISSILE_SIDE,
-    MISSILE_DOWN,
-    STAR,
-};
+#include "maze_structures.h"
 
 #define SPECIAL_BALL_LIFESPAN 12
 #define SPECIAL_STAR_LIFESPAN 12
-
-struct Ship
-{
-    Animation ship_body;
-    Animation ship_flame_down_big;
-    Animation ship_flame_down_small;
-    Animation ship_flame_back;
-    sf::Vector2f previous_position;
-    sf::Vector2f velocity;
-    int shield;
-    int fuel;
-
-    std::optional<Animation> cannon;
-    sf::Vector2f cannon_previous_position;
-    sf::Vector2f cannon_velocity;
-    int cannon_ammo;
-
-    std::optional<Animation> special;
-    SpecialType special_type;
-    int next_special;
-    sf::Vector2f special_previous_position;
-    sf::Vector2f special_velocity;
-    uint8_t special_ammo;
-    float special_lifespan;
-    
-    bool thrust_up;
-    bool thrust_horiz;
-};
 
 #define HEALTH_MAX 1000.0f
 #define FUEL_MAX 1000.0f
@@ -82,7 +45,7 @@ void move_ship(float dt, Ship & ship)
     ship.ship_body.sprite.value().move(ship.velocity);
 }
 
-void update_ship(Ship & ship)
+void update_flames_positions(Ship & ship)
 {
     if (ship.ship_body.sprite.value().getScale().x > 0)
     {
@@ -124,25 +87,25 @@ void get_item(Ship & ship, int id)
             ship.cannon_ammo = AMMO_MAX;
             break;
         case 1:
-            ship.special_type = js::GameObjects::BALL;
+            ship.special_type = BALL;
             ship.special_ammo = 20;
             break;
         case 2:
             ship.fuel = FUEL_MAX;
             break;
         case 3:
-            ship.special_type = js::GameObjects::MISSILE_DOWN;
+            ship.special_type = MISSILE_DOWN;
             ship.special_ammo = 50;
             break;
         case 4:
-            ship.special_type = js::GameObjects::MISSILE_SIDE;
+            ship.special_type = MISSILE_SIDE;
             ship.special_ammo = 50;
             break;
         case 5:
             ship.shield = HEALTH_MAX;
             break;
         case 6:
-            ship.special_type = js::GameObjects::STAR;
+            ship.special_type = STAR;
             ship.special_ammo = 20;
             break;
     }
@@ -260,7 +223,233 @@ void move_special(float dt, Ship & ship)
     }
 }
 
-} // namespace GameObjects
-} // namespace js
+void ship_check_bounds(Maze & maze, Ship & ship)
+{
+    if (ship.ship_body.sprite.value().getPosition().x < EDGE_LEFT + ship.ship_body.half_size.x)
+    {
+        // std::cout << "NEXT ROOM: left\n";
+        maze.current_room_col--;
+        ship.ship_body.sprite.value().setPosition({EDGE_RIGHT - ship.ship_body.half_size.x, ship.ship_body.sprite.value().getPosition().y});
+        if (ship.special.has_value())
+        {
+            switch (ship.special_type)
+            {
+                case BALL:
+                case STAR:
+                    // ball moves with ship to next room
+                    ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
+                    break;
+                default:
+                    // missiles are destroyed
+                    reset_special(ship);
+                    break;
+            }
+        }
+    }
+    else if (ship.ship_body.sprite.value().getPosition().x > EDGE_RIGHT - ship.ship_body.half_size.x)
+    {
+        // std::cout << "NEXT ROOM: right\n";
+        maze.current_room_col++;
+        ship.ship_body.sprite.value().setPosition({EDGE_LEFT + ship.ship_body.half_size.x, ship.ship_body.sprite.value().getPosition().y});
+        if (ship.special.has_value())
+        {
+            switch (ship.special_type)
+            {
+                case BALL:
+                case STAR:
+                    // ball moves with ship to next room
+                    ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
+                    break;
+                default:
+                    // missiles are destroyed
+                    reset_special(ship);
+                    break;
+            }
+        }
+    }
+    else if (ship.ship_body.sprite.value().getPosition().y < EDGE_TOP + ship.ship_body.half_size.y)
+    {
+        // std::cout << "NEXT ROOM: up\n";
+        maze.current_room_row--;
+        ship.ship_body.sprite.value().setPosition({ship.ship_body.sprite.value().getPosition().x, EDGE_BOTTOM - ship.ship_body.half_size.y});
+        if (ship.special.has_value())
+        {
+            switch (ship.special_type)
+            {
+                case BALL:
+                case STAR:
+                    // ball moves with ship to next room
+                    ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
+                    break;
+                default:
+                    // missiles are destroyed
+                    reset_special(ship);
+                    break;
+            }
+        }
+    }
+    else if (ship.ship_body.sprite.value().getPosition().y > EDGE_BOTTOM - ship.ship_body.half_size.y)
+    {
+        // std::cout << "NEXT ROOM: down\n";
+        maze.current_room_row++;
+        ship.ship_body.sprite.value().setPosition({ship.ship_body.sprite.value().getPosition().x, EDGE_TOP + ship.ship_body.half_size.y});
+        if (ship.special.has_value())
+        {
+            switch (ship.special_type)
+            {
+                case BALL:
+                case STAR:
+                    // ball and star move with ship to next room
+                    ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
+                    break;
+                default:
+                    // missiles are destroyed
+                    reset_special(ship);
+                    break;
+            }
+        }
+    }
+}
+
+void cannon_check_bounds(Ship & ship)
+{
+    if (ship.cannon.has_value())
+    {
+        if (ship.cannon.value().sprite.value().getPosition().x < EDGE_LEFT + ship.cannon.value().half_size.x ||
+            ship.cannon.value().sprite.value().getPosition().x > EDGE_RIGHT - ship.cannon.value().half_size.x ||
+            ship.cannon.value().sprite.value().getPosition().y < EDGE_TOP + ship.cannon.value().half_size.y ||
+            ship.cannon.value().sprite.value().getPosition().y > EDGE_BOTTOM - ship.cannon.value().half_size.y)
+        {
+            ship.cannon.reset();
+        }
+    }
+}
+
+void special_check_bounds(Ship & ship)
+{
+    if (ship.special.has_value())
+    {
+        auto & spc = ship.special.value();
+        if (spc.sprite.value().getPosition().x < EDGE_LEFT + spc.half_size.x ||
+            spc.sprite.value().getPosition().x > EDGE_RIGHT - spc.half_size.x)
+        {
+            switch (ship.special_type)
+            {
+                case BALL:
+                case STAR:
+                    // ball and start bounce of screen bounds
+                    ship.special_velocity.x *= -1;
+                    break;
+                default:
+                    // missiles are destroyed
+                    reset_special(ship);
+                    break;
+            }
+        }
+        else 
+        if (spc.sprite.value().getPosition().y < EDGE_TOP + spc.half_size.y ||
+            spc.sprite.value().getPosition().y > EDGE_BOTTOM - spc.half_size.y)
+        {
+            switch (ship.special_type)
+            {
+                case BALL:
+                case STAR:
+                    // ball and start bounce of screen bounds
+                    ship.special_velocity.y *= -1;
+                    break;
+                default:
+                    // missiles are destroyed
+                    reset_special(ship);
+                    break;
+            }
+        }
+    }
+}
+
+void collision_ship_wall(Ship & ship, Animation & wall)
+{
+    sf::Vector2f vec(0.0f, 0.0f);
+
+    if (checkCollision(ship.ship_body.sprite.value().getPosition(), ship.ship_body.half_size, ship.previous_position, 
+                        wall.sprite.value().getPosition(), wall.half_size, 
+                        vec))
+    {
+        // resolution
+        ship.ship_body.sprite.value().move(vec);
+        if (vec.x != 0)
+        {
+            ship.velocity.x = 0;
+        }
+        if (vec.y != 0)
+        {
+            ship.velocity.y = 0;
+        }
+    }
+}
+
+void collision_cannon_wall(Ship & ship, Animation & wall)
+{
+    if (ship.cannon.has_value())
+    {
+        if (checkCollision(ship.cannon.value(), wall))
+        {
+            ship.cannon.reset();
+        }
+    }
+}
+
+void collision_special_wall(Ship & ship, Animation & wall)
+{
+    sf::Vector2f vec(0.0f, 0.0f);
+
+    if (ship.special.has_value())
+    {
+        if (checkCollision(ship.special.value().sprite.value().getPosition(), ship.special.value().half_size, ship.special_previous_position, 
+                            wall.sprite.value().getPosition(), wall.half_size, 
+                            vec))
+        {
+            switch (ship.special_type)
+            {
+                case BALL:
+                case STAR:
+                    // ball and star bounce of walls
+                    ship.special.value().sprite.value().move(vec);
+                    if (vec.x != 0)
+                    {
+                        ship.special_velocity.x *= -1;
+                    }
+                    if (vec.y != 0)
+                    {
+                        ship.special_velocity.y *= -1;
+                    }
+                    break;
+                default:
+                    // missiles are destroyed
+                    reset_special(ship);
+                    break;
+            }
+        }
+    }
+}
+
+void collision_ship_item(Ship & ship, Animation & item)
+{
+    if (checkCollision(ship.ship_body, item))
+    {
+        int id = item.id;
+        if (item.id == 7) 
+            id = std::rand() % 7;
+        
+        if (ship.special.has_value() && (id == 1 || id == 3 || id == 4 || id == 6))
+        {
+            ship.next_special = id;
+        }
+        else
+        {
+            get_item(ship, id);
+        }
+        item.isAlive = false;
+    }
+}
 
 #endif

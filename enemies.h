@@ -3,11 +3,6 @@
 
 #include <set>
 
-namespace js {
-namespace GameObjects {
-
-const std::set<int> non_animated{0, 1, 2, 3, 4, 5, 6, 8, 11, 18};
-
 /*
 0   base                    not moving
 1   dish                    not moving      shot - horizontal
@@ -35,14 +30,7 @@ const std::set<int> non_animated{0, 1, 2, 3, 4, 5, 6, 8, 11, 18};
 
 #define ENEMY_CARRIED_GAP 2
 
-struct Enemy
-{
-    Animation anim;
-    std::optional<Animation> carried_enemy;
-    std::optional<Animation> carried_item;
-    sf::Vector2f previous_position;
-    sf::Vector2f velocity;
-};
+const std::set<int> non_animated{0, 1, 2, 3, 4, 5, 6, 8, 11, 18};
 
 sf::Vector2f enemy_get_size(Enemy & enemy)
 {
@@ -123,7 +111,7 @@ void create_enemy_anim(Animation & anim, const int & id, const int & subid, cons
     }
 }
 
-void create_enemy(Enemy & eo, const js::Data::Enemy & enemy, const Assets & assets)
+void create_enemy(Enemy & eo, const EnemyData & enemy, const Assets & assets)
 {
     create_enemy_anim(eo.anim, enemy.id, enemy.subid, assets);
 
@@ -317,7 +305,88 @@ void move_enemy(Enemy & enemy, const Ship & ship, float dt, int gFrame)
     }
 }
 
-} // namespace GameObjects
-} // namespace js
+void collision_enemy_wall(Enemy & enemy, Animation & wall)
+{
+    sf::Vector2f vec(0.0f, 0.0f);
+
+    auto e_pos = enemy_get_position(enemy);
+    auto e_hs = enemy_get_half_size(enemy);
+
+    if (checkCollision(e_pos, e_hs, enemy.previous_position, 
+                        wall.sprite.value().getPosition(), wall.half_size, 
+                        vec))
+    {
+        enemy.anim.sprite.value().move(vec);
+        if (enemy.carried_enemy.has_value())
+        {
+            enemy.carried_enemy.value().sprite.value().move(vec);
+        }
+        else
+        if (enemy.carried_item.has_value())
+        {
+            enemy.carried_item.value().sprite.value().move(vec);
+        }
+
+        if (enemy.anim.id == 15 || enemy.anim.id == 16)
+        {
+            if (vec.x != 0)
+            {
+                enemy.velocity.x *= -1;
+            }
+            if (vec.y != 0)
+            {
+                enemy.velocity.y *= -1;
+            }
+        }
+    }
+}
+
+void enemy_check_bounds(Enemy & enemy)
+{
+    if (enemy.anim.sprite.value().getPosition().x < EDGE_LEFT + enemy.anim.half_size.x)
+    {
+        enemy.anim.sprite.value().setPosition({EDGE_LEFT + enemy.anim.half_size.x, enemy.anim.sprite.value().getPosition().y});
+        enemy.velocity.x *= -1;
+    }
+    if (enemy.anim.sprite.value().getPosition().x > EDGE_RIGHT - enemy.anim.half_size.x)
+    {
+        enemy.anim.sprite.value().setPosition({EDGE_RIGHT - enemy.anim.half_size.x, enemy.anim.sprite.value().getPosition().y});
+        enemy.velocity.x *= -1;
+    } 
+    if (enemy.anim.sprite.value().getPosition().y < EDGE_TOP + enemy.anim.half_size.y)
+    {
+        enemy.anim.sprite.value().setPosition({enemy.anim.sprite.value().getPosition().x, EDGE_TOP + enemy.anim.half_size.y});
+        enemy.velocity.y *= -1;
+    }
+    if (enemy.anim.sprite.value().getPosition().y > EDGE_BOTTOM - enemy.anim.half_size.y)
+    {
+        enemy.anim.sprite.value().setPosition({enemy.anim.sprite.value().getPosition().x, EDGE_BOTTOM - enemy.anim.half_size.y});
+        enemy.velocity.y *= -1;
+    }
+
+    if (enemy.carried_enemy.has_value())
+    {
+        auto e_pos = enemy_get_position(enemy);
+        auto e_hs = enemy_get_half_size(enemy);
+        if (e_pos.y < EDGE_TOP + e_hs.y)
+        {
+            enemy.anim.sprite.value().move({0.0f, abs(e_pos.y - e_hs.y - EDGE_TOP)});
+            enemy.carried_enemy.value().sprite.value().move({0.0f, abs(e_pos.y - e_hs.y - EDGE_TOP)});
+            enemy.velocity.y *= -1;
+        }
+    }
+    else
+    if (enemy.carried_item.has_value())
+    {
+        auto e_pos = enemy_get_position(enemy);
+        auto e_hs = enemy_get_half_size(enemy);
+        if (e_pos.y < EDGE_TOP + e_hs.y)
+        {
+            enemy.anim.sprite.value().move({0.0f, abs(e_pos.y - e_hs.y - EDGE_TOP)});
+            enemy.carried_item.value().sprite.value().move({0.0f, abs(e_pos.y - e_hs.y - EDGE_TOP)});
+            enemy.velocity.y *= -1;
+        }
+    }
+}
 
 #endif

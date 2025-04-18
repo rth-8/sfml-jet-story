@@ -1,10 +1,7 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
 
-namespace js {
-namespace GameObjects {
-
-struct Animation
+typedef struct
 {
     int id;
     std::optional<sf::Sprite> sprite;
@@ -15,7 +12,7 @@ struct Animation
     int speed;
     int frame;
     bool isAlive;
-};
+} Animation;
 
 void create_animation(Animation & anim, int id, const sf::Texture & tex, float fw, float fh, int fc = 1, int spd = 0)
 {
@@ -56,8 +53,5 @@ void set_frame(Animation & anim, int aFrame)
         sf::IntRect({anim.frame * static_cast<int>(anim.size.x), 0}, 
                     {static_cast<int>(anim.size.x), static_cast<int>(anim.size.y)}));
 }
-
-} // namespace GameObjects
-} // namespace js
 
 #endif

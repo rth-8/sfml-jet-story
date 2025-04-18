@@ -1,7 +1,7 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
-bool checkCollision(const js::GameObjects::Animation & a1, const js::GameObjects::Animation & a2)
+bool checkCollision(const Animation & a1, const Animation & a2)
 {
     const auto & pos1 = a1.sprite.value().getPosition() - a1.half_size;
     const auto & pos2 = a2.sprite.value().getPosition() - a2.half_size;
