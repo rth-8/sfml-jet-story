@@ -146,7 +146,7 @@ int main()
 
         for (auto & enemy_o : room_o.enemies)
         {
-            move_enemy(enemy_o, ship_o, assets, dtAsSeconds, game_frame);
+            move_enemy(room_o, enemy_o, ship_o, assets, dtAsSeconds, game_frame);
         }
 
         for (auto & prj : projectiles)

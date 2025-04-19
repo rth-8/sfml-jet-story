@@ -386,15 +386,26 @@ void move_enemy_carried_element(Enemy & enemy, const Ship & ship, const Assets &
         });
     }
 }
-void spawn_enemy(int gFrame)
+void spawn_enemy(Room & room, const Enemy & spawner, const Assets & assets, int gFrame)
 {
     if (gFrame % SPAWN_INTERVAL == 0)
     {
-
+        int id = std::rand() % (17-11+1) + 11;
+        Enemy eo;
+        create_enemy_anim(eo.anim, id, 0, assets);
+        eo.anim.sprite.value().setPosition(spawner.anim.sprite.value().getPosition());
+        if (id == 15 || id == 16)
+        {
+            eo.velocity = {200.0f, 200.0f};
+        }
+        eo.anim.color_index = std::rand()%7+9;
+        eo.anim.sprite.value().setColor(zx_colors[eo.anim.color_index]);
+        eo.health = healths[id];
+        room.enemies.push_back(eo);
     }
 }
 
-void move_enemy(Enemy & enemy, const Ship & ship, const Assets & assets, float dt, int gFrame)
+void move_enemy(Room & room, Enemy & enemy, const Ship & ship, const Assets & assets, float dt, int gFrame)
 {
     enemy.previous_position = enemy_get_position(enemy);
 
@@ -424,7 +435,7 @@ void move_enemy(Enemy & enemy, const Ship & ship, const Assets & assets, float d
             shooting_horizontal(enemy.anim, ship, assets, dt, gFrame);
             break;
         case 10:
-            spawn_enemy(gFrame);
+            spawn_enemy(room, enemy, assets, gFrame);
             break;
         case 11:
             move_enemy_mirror(enemy, ship);
