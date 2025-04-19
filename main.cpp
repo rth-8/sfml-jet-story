@@ -24,8 +24,8 @@
 #include "maze_data.h"
 #include "animation.h"
 #include "maze_structures.h"
-#include "projectiles.h"
 #include "physics.h"
+#include "projectiles.h"
 #include "ship.h"
 #include "enemies.h"
 #include "maze.h"
@@ -204,6 +204,8 @@ int main()
 
         for (auto & prj : projectiles)
         {
+            collision_projectile_ship(prj, ship_o);
+
             if (prj.anim.sprite.value().getPosition().x < EDGE_LEFT + prj.anim.half_size.x ||
                 prj.anim.sprite.value().getPosition().x > EDGE_RIGHT - prj.anim.half_size.x ||
                 prj.anim.sprite.value().getPosition().y < EDGE_TOP + prj.anim.half_size.y ||

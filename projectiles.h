@@ -30,4 +30,20 @@ Projectile & create_projectile(const Assets & assets, int id)
     return projectiles[projectiles.size()-1];
 }
 
+void collision_projectile_ship(Projectile & prj, Ship & ship)
+{
+    if (checkCollision(prj.anim, ship.ship_body))
+    {
+        prj.anim.isAlive = false;
+        if (prj.anim.id == 9)
+        {
+            ship.shield = 0;
+        }
+        else
+        {
+            ship.shield -= 10;
+        }
+    }
+}
+
 #endif
