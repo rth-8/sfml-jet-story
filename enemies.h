@@ -29,6 +29,7 @@
 */
 
 #define ENEMY_CARRIED_GAP 2
+#define SPAWN_INTERVAL 500
 
 const std::set<int> non_animated{0, 1, 2, 3, 4, 5, 6, 8, 11, 18};
 const std::array<int, 21> healths{200, 60, 90, 30, 200, 90, 90, 90, 20, 90, 90, 10, 10, 10, 10, 10, 10, 10, 50, 50, 10};
@@ -99,7 +100,7 @@ void create_enemy_anim(Animation & anim, const int & id, const int & subid, cons
         {
             case 7:  create_animation(anim, id, assets.enemies[id], 50, 45, 4, 10); break;
             case 9:  create_animation(anim, id, assets.enemies[id], 49, 50, 8, 10); break;
-            case 10: create_animation(anim, id, assets.enemies[id], 50, 50, 2, 500); break;
+            case 10: create_animation(anim, id, assets.enemies[id], 50, 50, 2, SPAWN_INTERVAL); break;
             case 12: create_animation(anim, id, assets.enemies[id], 50, 50, 4, 6); break;
             case 13: create_animation(anim, id, assets.enemies[id], 47, 50, 2, 6); break;
             case 14: create_animation(anim, id, assets.enemies[id], 50, 50, 2, 6); break;
@@ -174,6 +175,133 @@ void create_enemy(Enemy & eo, const EnemyData & enemy, const Assets & assets)
     }
 }
 
+void shooting_horizontal(Animation & enemyAnim, const Ship & ship, const Assets & assets, float dt, int gFrame)
+{
+    if (enemyAnim.id == 1)
+    {
+        if (gFrame % 8 == 0)
+        {
+            if (ship.ship_body.sprite.value().getPosition().y > enemyAnim.sprite.value().getPosition().y - 25.0 &&
+                ship.ship_body.sprite.value().getPosition().y < enemyAnim.sprite.value().getPosition().y + 25.0)
+            {
+                auto & prj = create_projectile(assets, enemyAnim.id);
+                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
+                prj.velocity = {300.0f * enemyAnim.sprite.value().getScale().x, 0.0f};
+            }
+        }
+    }
+    else
+    if (enemyAnim.id == 3 || enemyAnim.id == 13)
+    {
+        if (gFrame % 100 == 0)
+        {
+            if (ship.ship_body.sprite.value().getPosition().y > enemyAnim.sprite.value().getPosition().y - 25.0 &&
+                ship.ship_body.sprite.value().getPosition().y < enemyAnim.sprite.value().getPosition().y + 25.0)
+            {
+                auto & prj = create_projectile(assets, enemyAnim.id);
+                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
+                prj.velocity = {200.0f * enemyAnim.sprite.value().getScale().x, 0.0f};
+            }
+        }
+    }
+    else
+    if (enemyAnim.id == 9)
+    {
+        if (ship.ship_body.sprite.value().getPosition().y > enemyAnim.sprite.value().getPosition().y - 25.0 &&
+            ship.ship_body.sprite.value().getPosition().y < enemyAnim.sprite.value().getPosition().y + 25.0)
+        {
+            auto & prj = create_projectile(assets, enemyAnim.id);
+            prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
+            if (ship.ship_body.sprite.value().getPosition().x < enemyAnim.sprite.value().getPosition().x)
+            {
+                prj.anim.sprite.value().setScale({-1.0, 1.0});
+                prj.velocity = {-150.0f, 0.0f};
+            }
+            else
+            {
+                prj.anim.sprite.value().setScale({1.0, 1.0});
+                prj.velocity = {150.0f, 0.0f};
+            }
+            enemyAnim.isAlive = false;
+        }
+    }
+}
+
+void shooting_vertical(Animation & enemyAnim, const Ship & ship, const Assets & assets, float dt, int gFrame)
+{
+    if (enemyAnim.id == 5)
+    {
+        if (gFrame % 20 == 0)
+        {
+            if (ship.ship_body.sprite.value().getPosition().x > enemyAnim.sprite.value().getPosition().x - 25.0 &&
+                ship.ship_body.sprite.value().getPosition().x < enemyAnim.sprite.value().getPosition().x + 25.0)
+            {
+                auto & prj = create_projectile(assets, enemyAnim.id);
+                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
+                prj.velocity = {0.0f, -220.0f};
+            }
+        }
+    }
+    else
+    if (enemyAnim.id == 6)
+    {
+        if (gFrame % 30 == 0)
+        {
+            if (ship.ship_body.sprite.value().getPosition().x > enemyAnim.sprite.value().getPosition().x - 25.0 &&
+                ship.ship_body.sprite.value().getPosition().x < enemyAnim.sprite.value().getPosition().x + 25.0)
+            {
+                auto & prj = create_projectile(assets, enemyAnim.id);
+                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
+                prj.velocity = {0.0f, 100.0f};
+            }
+        }
+    }
+}
+
+void shooting_diagonal(Animation & enemyAnim, const Ship & ship, const Assets & assets, float dt, int gFrame)
+{
+    if (enemyAnim.id == 8)
+    {
+        float dx = abs(ship.ship_body.sprite.value().getPosition().x - enemyAnim.sprite.value().getPosition().x);
+        float dy = abs(ship.ship_body.sprite.value().getPosition().y - enemyAnim.sprite.value().getPosition().y);
+        float d = abs(dx - dy);
+
+        if (d < 12.5)
+        {
+            if (enemyAnim.sprite.value().getScale().x < 0 && 
+                ship.ship_body.sprite.value().getPosition().x < enemyAnim.sprite.value().getPosition().x)
+            {
+                auto & prj = create_projectile(assets, enemyAnim.id);
+                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
+                prj.anim.sprite.value().setScale({-1.0, 1.0});
+                prj.velocity = {-200.0f, -200.0f};
+                enemyAnim.isAlive = false;
+            }
+            else
+            if (enemyAnim.sprite.value().getScale().x > 0 && 
+                ship.ship_body.sprite.value().getPosition().x > enemyAnim.sprite.value().getPosition().x)
+            {
+                auto & prj = create_projectile(assets, enemyAnim.id);
+                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
+                prj.anim.sprite.value().setScale({1.0, 1.0});
+                prj.velocity = {200.0f, -200.0f};
+                enemyAnim.isAlive = false;
+            }
+        }
+    }
+}
+
+void shooting_tracking(Animation & enemyAnim, const Ship & ship, const Assets & assets, float dt, int gFrame)
+{
+    if (gFrame % 100 == 0)
+    {
+        auto & prj = create_projectile(assets, enemyAnim.id);
+        prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
+        prj.velocity = ship.ship_body.sprite.value().getPosition() - enemyAnim.sprite.value().getPosition();
+        prj.velocity = prj.velocity.normalized() * 200.0f;
+    }
+}
+
 void move_enemy_mirror(Enemy & enemy, const Ship & ship)
 {
     if (ship.ship_body.sprite.value().getPosition().x < enemy.anim.sprite.value().getPosition().x)
@@ -212,10 +340,26 @@ void move_enemy_constant(Enemy & enemy, float dt)
     enemy.anim.sprite.value().move(enemy.velocity * dt);
 }
 
-void move_enemy_carried_element(Enemy & enemy, const Ship & ship)
+void move_enemy_carried_element(Enemy & enemy, const Ship & ship, const Assets & assets, float dt, int gFrame)
 {
     if (enemy.carried_enemy.has_value())
     {
+        switch (enemy.carried_enemy.value().id)
+        {
+            case 1: shooting_horizontal(enemy.carried_enemy.value(), ship, assets, dt, gFrame); break;
+            case 2: shooting_tracking(enemy.carried_enemy.value(), ship, assets, dt, gFrame); break;
+            case 3: shooting_horizontal(enemy.carried_enemy.value(), ship, assets, dt, gFrame); break;
+            case 5: shooting_vertical(enemy.carried_enemy.value(), ship, assets, dt, gFrame); break;
+            case 7: shooting_tracking(enemy.carried_enemy.value(), ship, assets, dt, gFrame); break;
+            case 8: shooting_diagonal(enemy.carried_enemy.value(), ship, assets, dt, gFrame); break;
+            case 9: shooting_horizontal(enemy.carried_enemy.value(), ship, assets, dt, gFrame); break;
+        }
+        if (enemy.carried_enemy.value().isAlive == false)
+        {
+            enemy.carried_enemy.reset();
+            return;
+        }
+
         enemy.carried_enemy.value().sprite.value().setPosition({
             enemy.anim.sprite.value().getPosition().x,
             enemy.anim.sprite.value().getPosition().y - enemy.anim.half_size.y - enemy.carried_enemy.value().half_size.y - ENEMY_CARRIED_GAP
@@ -242,40 +386,45 @@ void move_enemy_carried_element(Enemy & enemy, const Ship & ship)
         });
     }
 }
-
-void shooting_horizontal(Enemy & enemy, const Ship & ship, float dt, int gFrame)
+void spawn_enemy(int gFrame)
 {
+    if (gFrame % SPAWN_INTERVAL == 0)
+    {
 
+    }
 }
 
-void shooting_vertical(Enemy & enemy, const Ship & ship, float dt, int gFrame)
-{
-
-}
-
-void shooting_tracking(Enemy & enemy, const Ship & ship, float dt, int gFrame)
-{
-
-}
-
-void move_enemy(Enemy & enemy, const Ship & ship, float dt, int gFrame)
+void move_enemy(Enemy & enemy, const Ship & ship, const Assets & assets, float dt, int gFrame)
 {
     enemy.previous_position = enemy_get_position(enemy);
 
     switch (enemy.anim.id)
     {
         case 1:
-            shooting_horizontal(enemy, ship, dt, gFrame); 
+            shooting_horizontal(enemy.anim, ship, assets, dt, gFrame);
             break;
         case 2:
-            shooting_tracking(enemy, ship, dt, gFrame); 
+            shooting_tracking(enemy.anim, ship, assets, dt, gFrame);
             break;
         case 3:
             move_enemy_mirror(enemy, ship);
-            shooting_horizontal(enemy, ship, dt, gFrame); 
+            shooting_horizontal(enemy.anim, ship, assets, dt, gFrame);
+            break;
+        case 5:
+        case 6:
+            shooting_vertical(enemy.anim, ship, assets, dt, gFrame);
             break;
         case 7:
-            shooting_tracking(enemy, ship, dt, gFrame); 
+            shooting_tracking(enemy.anim, ship, assets, dt, gFrame);
+            break;
+        case 8:
+            shooting_diagonal(enemy.anim, ship, assets, dt, gFrame);
+            break;
+        case 9:
+            shooting_horizontal(enemy.anim, ship, assets, dt, gFrame);
+            break;
+        case 10:
+            spawn_enemy(gFrame);
             break;
         case 11:
             move_enemy_mirror(enemy, ship);
@@ -287,7 +436,7 @@ void move_enemy(Enemy & enemy, const Ship & ship, float dt, int gFrame)
         case 13: 
             move_enemy_mirror(enemy, ship);
             move_enemy_random_vertical_tracking(enemy, ship, dt, gFrame);
-            shooting_horizontal(enemy, ship, dt, gFrame);
+            shooting_horizontal(enemy.anim, ship, assets, dt, gFrame);
             break;
         case 14: 
             move_enemy_mirror(enemy, ship);
@@ -307,7 +456,7 @@ void move_enemy(Enemy & enemy, const Ship & ship, float dt, int gFrame)
             break;
         case 20:
             move_enemy_random(enemy, dt, gFrame);
-            move_enemy_carried_element(enemy, ship);
+            move_enemy_carried_element(enemy, ship, assets, dt, gFrame);
             break;
     }
 }

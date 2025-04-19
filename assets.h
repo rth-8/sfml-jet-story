@@ -15,6 +15,7 @@ struct Assets
     std::vector<sf::Texture> walls;
     std::vector<sf::Texture> items;
     std::vector<sf::Texture> enemies;
+    std::map<int, sf::Texture> enemy_shots;
     sf::Texture ship;
     sf::Texture ship_flame_down_big;
     sf::Texture ship_flame_down_small;
@@ -24,7 +25,6 @@ struct Assets
     sf::Texture special_missile_side;
     sf::Texture special_missile_down;
     sf::Texture special_star;
-
     std::map<SoundTypes, sf::SoundBuffer> sounds;
 };
 
@@ -54,6 +54,19 @@ void load_enemy_textures(Assets & assets)
     {
         assets.enemies.push_back(sf::Texture(std::format("./images/enemies/enemy_{:02d}.png", i)));
     }
+}
+
+void load_enemy_shot_textures(Assets & assets)
+{
+    assets.enemy_shots.insert({1, sf::Texture("./images/enemies/enemy_01_shot.png")});
+    assets.enemy_shots.insert({2, sf::Texture("./images/enemies/enemy_02_shot.png")});
+    assets.enemy_shots.insert({3, sf::Texture("./images/enemies/enemy_03_shot.png")});
+    assets.enemy_shots.insert({5, sf::Texture("./images/enemies/enemy_05_shot.png")});
+    assets.enemy_shots.insert({6, sf::Texture("./images/enemies/enemy_06_shot.png")});
+    assets.enemy_shots.insert({7, sf::Texture("./images/enemies/enemy_07_shot.png")});
+    assets.enemy_shots.insert({8, sf::Texture("./images/enemies/enemy_08_shot.png")});
+    assets.enemy_shots.insert({9, sf::Texture("./images/enemies/enemy_09_shot.png")});
+    assets.enemy_shots.insert({13, sf::Texture("./images/enemies/enemy_13_shot.png")});
 }
 
 void load_ship_textures(Assets & assets)

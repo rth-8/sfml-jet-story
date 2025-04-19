@@ -225,7 +225,7 @@ void move_special(float dt, Ship & ship)
     }
 }
 
-void ship_check_bounds(Maze & maze, Ship & ship)
+bool ship_check_bounds(Maze & maze, Ship & ship)
 {
     if (ship.ship_body.sprite.value().getPosition().x < EDGE_LEFT + ship.ship_body.half_size.x)
     {
@@ -247,6 +247,8 @@ void ship_check_bounds(Maze & maze, Ship & ship)
                     break;
             }
         }
+        projectiles.clear();
+        return true;
     }
     else if (ship.ship_body.sprite.value().getPosition().x > EDGE_RIGHT - ship.ship_body.half_size.x)
     {
@@ -268,6 +270,8 @@ void ship_check_bounds(Maze & maze, Ship & ship)
                     break;
             }
         }
+        projectiles.clear();
+        return true;
     }
     else if (ship.ship_body.sprite.value().getPosition().y < EDGE_TOP + ship.ship_body.half_size.y)
     {
@@ -289,6 +293,8 @@ void ship_check_bounds(Maze & maze, Ship & ship)
                     break;
             }
         }
+        projectiles.clear();
+        return true;
     }
     else if (ship.ship_body.sprite.value().getPosition().y > EDGE_BOTTOM - ship.ship_body.half_size.y)
     {
@@ -310,7 +316,11 @@ void ship_check_bounds(Maze & maze, Ship & ship)
                     break;
             }
         }
+        projectiles.clear();
+        return true;
     }
+
+    return false;
 }
 
 void cannon_check_bounds(Ship & ship)

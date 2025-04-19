@@ -24,6 +24,7 @@
 #include "maze_data.h"
 #include "animation.h"
 #include "maze_structures.h"
+#include "projectiles.h"
 #include "physics.h"
 #include "ship.h"
 #include "enemies.h"
@@ -46,6 +47,7 @@ int main()
     load_item_textures(assets);
     load_ship_textures(assets);
     load_enemy_textures(assets);
+    load_enemy_shot_textures(assets);
     load_sounds(assets);
     
     MazeData maze;
@@ -121,6 +123,15 @@ int main()
             }
         }
 
+        // SFML events
+        while (const std::optional event = window.pollEvent())
+        {
+            if (event->is<sf::Event::Closed>())
+            {
+                window.close();
+            }
+        }
+
         // update
 
         move_ship(dtAsSeconds, ship_o);
@@ -135,7 +146,12 @@ int main()
 
         for (auto & enemy_o : room_o.enemies)
         {
-            move_enemy(enemy_o, ship_o, dtAsSeconds, game_frame);
+            move_enemy(enemy_o, ship_o, assets, dtAsSeconds, game_frame);
+        }
+
+        for (auto & prj : projectiles)
+        {
+            prj.anim.sprite.value().move(prj.velocity * dtAsSeconds);
         }
 
         // collisions
@@ -149,16 +165,20 @@ int main()
             {
                 collision_enemy_wall(enemy_o, wall_o);
             }
+
+            for (auto & prj : projectiles)
+            {
+                if (checkCollision(prj.anim, wall_o))
+                {
+                    prj.anim.isAlive = false;
+                }
+            }
         }
 
         for (auto & item_o : room_o.items)
         {
             collision_ship_item(ship_o, item_o);
         }
-
-        ship_check_bounds(maze_o, ship_o);
-        cannon_check_bounds(ship_o);
-        special_check_bounds(ship_o);
 
         bool anyCollision = false;
         for (auto & enemy_o : room_o.enemies)
@@ -180,6 +200,25 @@ int main()
         if (!anyCollision)
         {
             sound_ship_damage.value().stop();
+        }
+
+        for (auto & prj : projectiles)
+        {
+            if (prj.anim.sprite.value().getPosition().x < EDGE_LEFT + prj.anim.half_size.x ||
+                prj.anim.sprite.value().getPosition().x > EDGE_RIGHT - prj.anim.half_size.x ||
+                prj.anim.sprite.value().getPosition().y < EDGE_TOP + prj.anim.half_size.y ||
+                prj.anim.sprite.value().getPosition().y > EDGE_BOTTOM - prj.anim.half_size.y)
+            {
+                prj.anim.isAlive = false;
+            }
+        }
+
+        cannon_check_bounds(ship_o);
+        special_check_bounds(ship_o);
+        if (ship_check_bounds(maze_o, ship_o))
+        {
+            game_frame = 0;
+            continue;
         }
 
         // animations
@@ -208,19 +247,15 @@ int main()
             }
         }
 
-        // SFML events
-        while (const std::optional event = window.pollEvent())
+        for (auto & prj : projectiles)
         {
-            if (event->is<sf::Event::Closed>())
-            {
-                window.close();
-            }
+            animation_update(prj.anim, game_frame);
         }
-
-        window.clear();
 
         // render
 
+        window.clear();
+        
         window.draw(ship_o.ship_body.sprite.value());
         if (ship_o.thrust_horiz)
         {
@@ -272,6 +307,11 @@ int main()
             // drawBB(window, pos, size, hs, sf::Color::Green);
         }
 
+        for (auto & prj : projectiles)
+        {
+            window.draw(prj.anim.sprite.value());
+        }
+
         for (auto & wall_o : room_o.walls)
         {
             window.draw(wall_o.sprite.value());
@@ -293,6 +333,14 @@ int main()
         {
             if ((*it).anim.isAlive == false) 
                 it = room_o.enemies.erase(it);
+            else
+                ++it;
+        }
+
+        for (std::vector<Projectile>::iterator it = projectiles.begin(); it != projectiles.end();)
+        {
+            if ((*it).anim.isAlive == false) 
+                it = projectiles.erase(it);
             else
                 ++it;
         }
