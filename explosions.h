@@ -13,7 +13,7 @@ std::vector<Fragment> fragments;
 void create_fragment(const sf::Vector2f & pos, const sf::Vector2f & velocity, const Assets & assets)
 {
     Fragment fg;
-    create_animation(fg.anim, 0, assets.fragment, 25, 25, 5, 20);
+    create_animation(fg.anim, 0, assets.fragment, 24, 24, 5, 20);
     fg.anim.sprite.value().setPosition(pos);
     set_frame(fg.anim, std::rand() % fg.anim.frame_count);
     fg.velocity = velocity;
