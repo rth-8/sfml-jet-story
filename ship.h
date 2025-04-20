@@ -36,9 +36,6 @@ void create_ship(Ship & ship, const sf::Vector2f & pos, const Assets & assets)
     ship.thrust_horiz = false;
 }
 
-#define FRICTION 0.7f
-#define GRAVITY 8.9f
-
 void move_ship(float dt, Ship & ship)
 {
     ship.velocity.x -= FRICTION * ship.velocity.x * dt;
@@ -247,7 +244,6 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
                     break;
             }
         }
-        projectiles.clear();
         return true;
     }
     else if (ship.ship_body.sprite.value().getPosition().x > EDGE_RIGHT - ship.ship_body.half_size.x)
@@ -270,7 +266,6 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
                     break;
             }
         }
-        projectiles.clear();
         return true;
     }
     else if (ship.ship_body.sprite.value().getPosition().y < EDGE_TOP + ship.ship_body.half_size.y)
@@ -293,7 +288,6 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
                     break;
             }
         }
-        projectiles.clear();
         return true;
     }
     else if (ship.ship_body.sprite.value().getPosition().y > EDGE_BOTTOM - ship.ship_body.half_size.y)
@@ -316,7 +310,6 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
                     break;
             }
         }
-        projectiles.clear();
         return true;
     }
 

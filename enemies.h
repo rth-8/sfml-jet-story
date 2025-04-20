@@ -223,6 +223,7 @@ void shooting_horizontal(Animation & enemyAnim, const Ship & ship, const Assets 
                 prj.velocity = {150.0f, 0.0f};
             }
             enemyAnim.isAlive = false;
+            create_explosion(enemyAnim.sprite.value().getPosition(), assets);
         }
     }
 }
@@ -276,6 +277,7 @@ void shooting_diagonal(Animation & enemyAnim, const Ship & ship, const Assets & 
                 prj.anim.sprite.value().setScale({-1.0, 1.0});
                 prj.velocity = {-200.0f, -200.0f};
                 enemyAnim.isAlive = false;
+                create_explosion(enemyAnim.sprite.value().getPosition(), assets);
             }
             else
             if (enemyAnim.sprite.value().getScale().x > 0 && 
@@ -286,6 +288,7 @@ void shooting_diagonal(Animation & enemyAnim, const Ship & ship, const Assets & 
                 prj.anim.sprite.value().setScale({1.0, 1.0});
                 prj.velocity = {200.0f, -200.0f};
                 enemyAnim.isAlive = false;
+                create_explosion(enemyAnim.sprite.value().getPosition(), assets);
             }
         }
     }
@@ -508,7 +511,7 @@ void collision_enemy_wall(Enemy & enemy, Animation & wall)
     }
 }
 
-bool collision_enemy_ship(Enemy & enemy, Ship & ship)
+bool collision_enemy_ship(Enemy & enemy, Ship & ship, const Assets & assets)
 {
     bool result = false;
 
@@ -521,9 +524,10 @@ bool collision_enemy_ship(Enemy & enemy, Ship & ship)
             sound_ship_damage.value().play();
             if (enemy.health <= 0)
             {
+                enemy.anim.isAlive = false;
                 sound_ship_damage.value().stop();
                 sound_boom.value().play();
-                enemy.anim.isAlive = false;
+                create_explosion(enemy.anim.sprite.value().getPosition(), assets);
             }
             else
             {
@@ -551,6 +555,7 @@ bool collision_enemy_ship(Enemy & enemy, Ship & ship)
                 {
                     sound_ship_damage.value().stop();
                     sound_boom.value().play();
+                    create_explosion(enemy.carried_enemy.value().sprite.value().getPosition(), assets);
                     enemy.carried_enemy.reset();
                 }
                 else
@@ -570,7 +575,7 @@ bool collision_enemy_ship(Enemy & enemy, Ship & ship)
     return result;
 }
 
-void collision_enemy_cannon(Enemy & enemy, Ship & ship)
+void collision_enemy_cannon(Enemy & enemy, Ship & ship, const Assets & assets)
 {
     if (checkCollision(enemy.anim, ship.cannon.value()))
     {
@@ -579,8 +584,9 @@ void collision_enemy_cannon(Enemy & enemy, Ship & ship)
         sound_hit.value().play();
         if (enemy.health <= 0)
         {
-            sound_boom.value().play();
             enemy.anim.isAlive = false;
+            sound_boom.value().play();
+            create_explosion(enemy.anim.sprite.value().getPosition(), assets);
         }
     }
 
@@ -594,13 +600,14 @@ void collision_enemy_cannon(Enemy & enemy, Ship & ship)
             if (enemy.carried_enemy_health <= 0)
             {
                 sound_boom.value().play();
+                create_explosion(enemy.carried_enemy.value().sprite.value().getPosition(), assets);
                 enemy.carried_enemy.reset();
             }
         }
     }
 }
 
-void collision_enemy_special(Enemy & enemy, Ship & ship)
+void collision_enemy_special(Enemy & enemy, Ship & ship, const Assets & assets)
 {
     if (checkCollision(enemy.anim, ship.special.value()))
     {
@@ -609,8 +616,9 @@ void collision_enemy_special(Enemy & enemy, Ship & ship)
         {
             ship.special.reset();
         }
-        sound_boom.value().play();
         enemy.anim.isAlive = false;
+        sound_boom.value().play();
+        create_explosion(enemy.anim.sprite.value().getPosition(), assets);
     }
 
     if (enemy.anim.isAlive == true && enemy.carried_enemy.has_value())
@@ -623,6 +631,7 @@ void collision_enemy_special(Enemy & enemy, Ship & ship)
                 ship.special.reset();
             }
             sound_boom.value().play();
+            create_explosion(enemy.carried_enemy.value().sprite.value().getPosition(), assets);
             enemy.carried_enemy.reset();
         }
     }

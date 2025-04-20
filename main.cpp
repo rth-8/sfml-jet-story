@@ -17,6 +17,8 @@
 
 #define ACCEL_VERT 20.0f
 #define ACCEL_HORIZ 7.0f
+#define FRICTION 0.7f
+#define GRAVITY 8.9f
 
 #include "zx_colors.h"
 #include "assets.h"
@@ -25,11 +27,19 @@
 #include "animation.h"
 #include "maze_structures.h"
 #include "physics.h"
+#include "explosions.h"
 #include "projectiles.h"
 #include "ship.h"
 #include "enemies.h"
 #include "maze.h"
 #include "debug_draw.h"
+
+void room_changed()
+{
+    projectiles.clear();
+    explosions.clear();
+    fragments.clear();
+}
 
 int main()
 {
@@ -48,6 +58,7 @@ int main()
     load_ship_textures(assets);
     load_enemy_textures(assets);
     load_enemy_shot_textures(assets);
+    load_misc_textures(assets);
     load_sounds(assets);
     
     MazeData maze;
@@ -154,6 +165,11 @@ int main()
             prj.anim.sprite.value().move(prj.velocity * dtAsSeconds);
         }
 
+        for (auto & fg : fragments)
+        {
+            move_fragment(fg, dtAsSeconds);
+        }
+
         // collisions
 
         for (auto & wall_o : room_o.walls)
@@ -168,9 +184,14 @@ int main()
 
             for (auto & prj : projectiles)
             {
-                if (checkCollision(prj.anim, wall_o))
+                collision_projectile_wall(prj, wall_o, assets);
+            }
+
+            for (auto & fg : fragments)
+            {
+                if (checkCollision(fg.anim, wall_o))
                 {
-                    prj.anim.isAlive = false;
+                    fg.anim.isAlive = false;
                 }
             }
         }
@@ -183,17 +204,17 @@ int main()
         bool anyCollision = false;
         for (auto & enemy_o : room_o.enemies)
         {
-            if (collision_enemy_ship(enemy_o, ship_o))
+            if (collision_enemy_ship(enemy_o, ship_o, assets))
             {
                 anyCollision = true;
             }
             if (ship_o.cannon.has_value())
             {
-                collision_enemy_cannon(enemy_o, ship_o);
+                collision_enemy_cannon(enemy_o, ship_o, assets);
             }
             if (ship_o.special.has_value())
             {
-                collision_enemy_special(enemy_o, ship_o);
+                collision_enemy_special(enemy_o, ship_o, assets);
             }
             enemy_check_bounds(enemy_o);
         }
@@ -204,21 +225,20 @@ int main()
 
         for (auto & prj : projectiles)
         {
-            collision_projectile_ship(prj, ship_o);
+            collision_projectile_ship(prj, ship_o, assets);
+            projectile_check_bounds(prj);
+        }
 
-            if (prj.anim.sprite.value().getPosition().x < EDGE_LEFT + prj.anim.half_size.x ||
-                prj.anim.sprite.value().getPosition().x > EDGE_RIGHT - prj.anim.half_size.x ||
-                prj.anim.sprite.value().getPosition().y < EDGE_TOP + prj.anim.half_size.y ||
-                prj.anim.sprite.value().getPosition().y > EDGE_BOTTOM - prj.anim.half_size.y)
-            {
-                prj.anim.isAlive = false;
-            }
+        for (auto & fg : fragments)
+        {
+            fragment_check_bounds(fg);
         }
 
         cannon_check_bounds(ship_o);
         special_check_bounds(ship_o);
         if (ship_check_bounds(maze_o, ship_o))
         {
+            room_changed();
             game_frame = 0;
             continue;
         }
@@ -229,29 +249,47 @@ int main()
 
         if (ship_o.thrust_horiz)
         {
-            animation_update(ship_o.ship_flame_back, game_frame);
+            animation_update(ship_o.ship_flame_back);
         }
         if (ship_o.thrust_up) 
         {
-            animation_update(ship_o.ship_flame_down_big, game_frame);
-            animation_update(ship_o.ship_flame_down_small, game_frame);
+            animation_update(ship_o.ship_flame_down_big);
+            animation_update(ship_o.ship_flame_down_small);
         }
 
         for (auto & enemy_o : room_o.enemies)
         {
             if (enemy_o.anim.sprite.has_value())
             {
-                animation_update(enemy_o.anim, game_frame);
+                animation_update(enemy_o.anim);
                 if (enemy_o.carried_enemy.has_value())
                 {
-                    animation_update(enemy_o.carried_enemy.value(), game_frame);
+                    animation_update(enemy_o.carried_enemy.value());
                 }
             }
         }
 
         for (auto & prj : projectiles)
         {
-            animation_update(prj.anim, game_frame);
+            animation_update(prj.anim);
+        }
+
+        for (auto & expl : explosions)
+        {
+            animation_update(expl);
+            if (has_animation_ended(expl))
+            {
+                expl.isAlive = false;
+            }
+        }
+
+        for (auto & fg : fragments)
+        {
+            if (fg.anim.counter % fg.anim.speed == 0)
+            {
+                set_frame(fg.anim, std::rand() % fg.anim.frame_count);
+            }
+            fg.anim.counter++;
         }
 
         // render
@@ -314,6 +352,16 @@ int main()
             window.draw(prj.anim.sprite.value());
         }
 
+        for (auto & expl : explosions)
+        {
+            window.draw(expl.sprite.value());
+        }
+
+        for (auto & fg : fragments)
+        {
+            window.draw(fg.anim.sprite.value());
+        }
+
         for (auto & wall_o : room_o.walls)
         {
             window.draw(wall_o.sprite.value());
@@ -343,6 +391,22 @@ int main()
         {
             if ((*it).anim.isAlive == false) 
                 it = projectiles.erase(it);
+            else
+                ++it;
+        }
+
+        for (std::vector<Animation>::iterator it = explosions.begin(); it != explosions.end();)
+        {
+            if ((*it).isAlive == false) 
+                it = explosions.erase(it);
+            else
+                ++it;
+        }
+
+        for (std::vector<Fragment>::iterator it = fragments.begin(); it != fragments.end();)
+        {
+            if ((*it).anim.isAlive == false) 
+                it = fragments.erase(it);
             else
                 ++it;
         }

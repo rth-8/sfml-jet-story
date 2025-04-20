@@ -1,6 +1,8 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
 
+#include <cmath>
+
 typedef struct
 {
     int id;
@@ -11,6 +13,7 @@ typedef struct
     int frame_count;
     int speed;
     int frame;
+    int counter;
     bool isAlive;
 } Animation;
 
@@ -26,23 +29,25 @@ void create_animation(Animation & anim, int id, const sf::Texture & tex, float f
     anim.frame_count = fc;
     anim.speed = spd;
     anim.frame = 0;
+    anim.counter = 0;
     anim.sprite = std::make_optional<sf::Sprite>(tex);
     anim.sprite.value().setTextureRect(
         sf::IntRect({anim.frame * static_cast<int>(anim.size.x), 0},
-                    {static_cast<int>(anim.size.x), static_cast<int>(anim.size.y)}));
+                    {static_cast<int>(floor(anim.size.x)), static_cast<int>(floor(anim.size.y))}));
     anim.sprite.value().setOrigin(anim.half_size);
     anim.color_index = 15;
     anim.isAlive = true;
 }
 
-void animation_update(Animation & anim, int gFrame)
+void animation_update(Animation & anim)
 {
-    if (anim.frame_count > 1 && anim.speed > 0 && gFrame > 0)
+    if (anim.frame_count > 1 && anim.speed > 0)
     {
-        anim.frame = (gFrame / anim.speed) % anim.frame_count;
+        anim.frame = (anim.counter / anim.speed) % anim.frame_count;
         anim.sprite.value().setTextureRect(
-            sf::IntRect({anim.frame * static_cast<int>(anim.size.x), 0}, 
-                        {static_cast<int>(anim.size.x), static_cast<int>(anim.size.y)}));
+            sf::IntRect({anim.frame * static_cast<int>(floor(anim.size.x)), 0}, 
+                        {static_cast<int>(floor(anim.size.x)), static_cast<int>(floor(anim.size.y))}));
+        anim.counter++;
     }
 }
 
@@ -52,6 +57,11 @@ void set_frame(Animation & anim, int aFrame)
     anim.sprite.value().setTextureRect(
         sf::IntRect({anim.frame * static_cast<int>(anim.size.x), 0}, 
                     {static_cast<int>(anim.size.x), static_cast<int>(anim.size.y)}));
+}
+
+bool has_animation_ended(const Animation & anim)
+{
+    return (anim.frame == anim.frame_count - 1); // animation reached last frame
 }
 
 #endif

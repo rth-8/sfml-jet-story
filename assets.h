@@ -25,6 +25,8 @@ struct Assets
     sf::Texture special_missile_side;
     sf::Texture special_missile_down;
     sf::Texture special_star;
+    sf::Texture explosion;
+    sf::Texture fragment;
     std::map<SoundTypes, sf::SoundBuffer> sounds;
 };
 
@@ -80,6 +82,12 @@ void load_ship_textures(Assets & assets)
     if (!assets.special_missile_side.loadFromFile("./images/ship/missile_side.png")) std::cerr << "Failed to load missile_side.png!";
     if (!assets.special_missile_down.loadFromFile("./images/ship/missile_down.png")) std::cerr << "Failed to load missile_down.png!";
     if (!assets.special_star.loadFromFile("./images/ship/star.png")) std::cerr << "Failed to load star.png!";
+}
+
+void load_misc_textures(Assets & assets)
+{
+    if (!assets.explosion.loadFromFile("./images/misc/boom.png")) std::cerr << "Failed to load boom.png!";
+    if (!assets.fragment.loadFromFile("./images/misc/fragment.png")) std::cerr << "Failed to load fragment.png!";
 }
 
 void load_sounds(Assets & assets)
