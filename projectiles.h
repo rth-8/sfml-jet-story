@@ -60,6 +60,27 @@ Projectile & create_projectile(const Assets & assets, int id)
 void move_projectile(Projectile & prj, float dt)
 {
     prj.anim.sprite.value().move(prj.velocity * dt);
+
+    if (prj.anim.id == 1 && sounds.at(ENEMY_01_SHOT).getStatus() != sf::SoundSource::Status::Playing)
+    {
+        sounds.at(ENEMY_01_SHOT).play();
+    }
+
+    if (prj.anim.id == 5 && sounds.at(ENEMY_05_SHOT).getStatus() != sf::SoundSource::Status::Playing)
+    {
+        sounds.at(ENEMY_05_SHOT).play();
+    }
+
+    if (prj.anim.id == 6 && sounds.at(ENEMY_06_SHOT).getStatus() != sf::SoundSource::Status::Playing)
+    {
+        sounds.at(ENEMY_06_SHOT).play();
+    }
+
+    if (prj.anim.id == 8 && sounds.at(ENEMY_08_SHOT).getStatus() != sf::SoundSource::Status::Playing)
+    {
+        sounds.at(ENEMY_08_SHOT).play();
+    }
+
     if (prj.anim.id == 9 && sounds.at(ENEMY_09_SHOT).getStatus() != sf::SoundSource::Status::Playing)
     {
         sounds.at(ENEMY_09_SHOT).play();
@@ -76,6 +97,21 @@ void collision_projectile_wall(Projectile & prj, Animation & wall, const Assets 
         {
             sounds.at(BOOM).play();
             create_explosion(prj.anim.sprite.value().getPosition(), assets);
+        }
+
+        if (prj.anim.id == 1)
+        {
+            sounds.at(ENEMY_01_SHOT).stop();
+        }
+
+        if (prj.anim.id == 5)
+        {
+            sounds.at(ENEMY_05_SHOT).stop();
+        }
+
+        if (prj.anim.id == 6)
+        {
+            sounds.at(ENEMY_06_SHOT).stop();
         }
 
         if (prj.anim.id == 8)
@@ -113,6 +149,21 @@ void collision_projectile_ship(Projectile & prj, Ship & ship, const Assets & ass
             create_explosion(prj.anim.sprite.value().getPosition(), assets);
         }
 
+        if (prj.anim.id == 1)
+        {
+            sounds.at(ENEMY_01_SHOT).stop();
+        }
+
+        if (prj.anim.id == 5)
+        {
+            sounds.at(ENEMY_05_SHOT).stop();
+        }
+
+        if (prj.anim.id == 6)
+        {
+            sounds.at(ENEMY_06_SHOT).stop();
+        }
+
         if (prj.anim.id == 8)
         {
             sounds.at(ENEMY_08_SHOT).stop();
@@ -134,6 +185,21 @@ void projectile_check_bounds(Projectile & prj)
     {
         prj.anim.isAlive = false;
 
+        if (prj.anim.id == 1)
+        {
+            sounds.at(ENEMY_01_SHOT).stop();
+        }
+
+        if (prj.anim.id == 5)
+        {
+            sounds.at(ENEMY_05_SHOT).stop();
+        }
+
+        if (prj.anim.id == 6)
+        {
+            sounds.at(ENEMY_06_SHOT).stop();
+        }
+        
         if (prj.anim.id == 8)
         {
             sounds.at(ENEMY_08_SHOT).stop();
