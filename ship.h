@@ -344,6 +344,8 @@ void special_check_bounds(Ship & ship)
                 case STAR:
                     // ball and start bounce of screen bounds
                     ship.special_velocity.x *= -1;
+                    sounds.at(BALL_BOUNCE).stop();
+                    sounds.at(BALL_BOUNCE).play();
                     break;
                 default:
                     // missiles are destroyed
@@ -427,6 +429,8 @@ void collision_special_wall(Ship & ship, Animation & wall)
                     {
                         ship.special_velocity.y *= -1;
                     }
+                    sounds.at(BALL_BOUNCE).stop();
+                    sounds.at(BALL_BOUNCE).play();
                     break;
                 default:
                     // missiles are destroyed
@@ -454,6 +458,7 @@ void collision_ship_item(Ship & ship, Animation & item)
             get_item(ship, id);
         }
         item.isAlive = false;
+        sounds.at(GET_ITEM).play();
     }
 }
 

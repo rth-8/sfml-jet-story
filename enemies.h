@@ -405,6 +405,7 @@ void spawn_enemy(Room & room, const Enemy & spawner, const Assets & assets, int 
         eo.anim.sprite.value().setColor(zx_colors[eo.anim.color_index]);
         eo.health = healths[id];
         room.enemies.push_back(eo);
+        sounds.at(ENEMY_10_SPAWN).play();
     }
 }
 
@@ -521,12 +522,19 @@ bool collision_enemy_ship(Enemy & enemy, Ship & ship, const Assets & assets)
         {
             ship.shield -= 10;
             enemy.health -= 10;
-            sound_ship_damage.value().play();
+            sounds.at(DAMAGE).play();
             if (enemy.health <= 0)
             {
                 enemy.anim.isAlive = false;
-                sound_ship_damage.value().stop();
-                sound_boom.value().play();
+                sounds.at(DAMAGE).stop();
+                if (enemy.anim.id == 0)
+                {
+                    sounds.at(BOOM_BASE).play();
+                }
+                else
+                {
+                    sounds.at(BOOM).play();
+                }
                 create_explosion(enemy.anim.sprite.value().getPosition(), assets);
             }
             else
@@ -550,11 +558,18 @@ bool collision_enemy_ship(Enemy & enemy, Ship & ship, const Assets & assets)
             {
                 ship.shield -= 10;
                 enemy.carried_enemy_health -= 10;
-                sound_ship_damage.value().play();
+                sounds.at(DAMAGE).play();
                 if (enemy.carried_enemy_health <= 0)
                 {
-                    sound_ship_damage.value().stop();
-                    sound_boom.value().play();
+                    sounds.at(DAMAGE).stop();
+                    if (enemy.carried_enemy.value().id == 0)
+                    {
+                        sounds.at(BOOM_BASE).play();
+                    }
+                    else
+                    {
+                        sounds.at(BOOM).play();
+                    }
                     create_explosion(enemy.carried_enemy.value().sprite.value().getPosition(), assets);
                     enemy.carried_enemy.reset();
                 }
@@ -581,11 +596,18 @@ void collision_enemy_cannon(Enemy & enemy, Ship & ship, const Assets & assets)
     {
         enemy.health -= 10;
         ship.cannon.reset();
-        sound_hit.value().play();
+        sounds.at(HIT_ENEMY).play();
         if (enemy.health <= 0)
         {
             enemy.anim.isAlive = false;
-            sound_boom.value().play();
+            if (enemy.anim.id == 0)
+            {
+                sounds.at(BOOM_BASE).play();
+            }
+            else
+            {
+                sounds.at(BOOM).play();
+            }
             create_explosion(enemy.anim.sprite.value().getPosition(), assets);
         }
     }
@@ -596,10 +618,17 @@ void collision_enemy_cannon(Enemy & enemy, Ship & ship, const Assets & assets)
         {
             enemy.carried_enemy_health -= 10;
             ship.cannon.reset();
-            sound_hit.value().play();
+            sounds.at(HIT_ENEMY).play();
             if (enemy.carried_enemy_health <= 0)
             {
-                sound_boom.value().play();
+                if (enemy.carried_enemy.value().id == 0)
+                {
+                    sounds.at(BOOM_BASE).play();
+                }
+                else
+                {
+                    sounds.at(BOOM).play();
+                }
                 create_explosion(enemy.carried_enemy.value().sprite.value().getPosition(), assets);
                 enemy.carried_enemy.reset();
             }
@@ -617,7 +646,14 @@ void collision_enemy_special(Enemy & enemy, Ship & ship, const Assets & assets)
             ship.special.reset();
         }
         enemy.anim.isAlive = false;
-        sound_boom.value().play();
+        if (enemy.anim.id == 0)
+        {
+            sounds.at(BOOM_BASE).play();
+        }
+        else
+        {
+            sounds.at(BOOM).play();
+        }
         create_explosion(enemy.anim.sprite.value().getPosition(), assets);
     }
 
@@ -630,7 +666,14 @@ void collision_enemy_special(Enemy & enemy, Ship & ship, const Assets & assets)
             {
                 ship.special.reset();
             }
-            sound_boom.value().play();
+            if (enemy.carried_enemy.value().id == 0)
+            {
+                sounds.at(BOOM_BASE);
+            }
+            else
+            {
+                sounds.at(BOOM).play();
+            }
             create_explosion(enemy.carried_enemy.value().sprite.value().getPosition(), assets);
             enemy.carried_enemy.reset();
         }

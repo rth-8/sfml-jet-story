@@ -7,6 +7,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Vector2.hpp>
+#include <SFML/Audio/SoundSource.hpp>
 #include <SFML/Audio/SoundBuffer.hpp>
 #include <SFML/Audio/Sound.hpp>
 
@@ -39,6 +40,12 @@ void room_changed()
     projectiles.clear();
     explosions.clear();
     fragments.clear();
+
+    for (int i = DAMAGE; i != LAST; i++)
+    {
+        SoundTypes t = static_cast<SoundTypes>(i);
+        sounds.at(t).stop();
+    }
 }
 
 int main()
@@ -108,6 +115,7 @@ int main()
             {
                 ship_o.special_ammo--;
                 create_special(ship_o, assets);
+                sounds.at(SPECIAL_LAUNCH).play();
             }
         }
 
@@ -131,6 +139,7 @@ int main()
             {
                 ship_o.cannon_ammo--;
                 create_cannon(ship_o, assets);
+                sounds.at(CANNON_SHOT).play();
             }
         }
 
@@ -162,7 +171,7 @@ int main()
 
         for (auto & prj : projectiles)
         {
-            prj.anim.sprite.value().move(prj.velocity * dtAsSeconds);
+            move_projectile(prj, dtAsSeconds);
         }
 
         for (auto & fg : fragments)
@@ -220,7 +229,7 @@ int main()
         }
         if (!anyCollision)
         {
-            sound_ship_damage.value().stop();
+            sounds.at(DAMAGE).stop();
         }
 
         for (auto & prj : projectiles)

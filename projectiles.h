@@ -16,18 +16,54 @@ Projectile & create_projectile(const Assets & assets, int id)
     auto & tex = assets.enemy_shots.at(id);
     switch (id)
     {
-        case 1:  create_animation(prj.anim, id, tex, 50, 50, 4, 6); break;
-        case 2:  create_animation(prj.anim, id, tex, tex.getSize().x, tex.getSize().y); break;
-        case 3:  create_animation(prj.anim, id, tex, tex.getSize().x, tex.getSize().y); break;
-        case 5:  create_animation(prj.anim, id, tex, 40, 50, 4, 6); break;
-        case 6:  create_animation(prj.anim, id, tex, 34, 50, 4, 6); break;
-        case 7:  create_animation(prj.anim, id, tex, 18, 21, 4, 6); break;
-        case 8:  create_animation(prj.anim, id, tex, tex.getSize().x, tex.getSize().y); break;
-        case 9:  create_animation(prj.anim, id, tex, 50, 35, 2, 6); break;
-        case 13: create_animation(prj.anim, id, tex, tex.getSize().x, tex.getSize().y); break;
+        case 1:  
+            create_animation(prj.anim, id, tex, 50, 50, 4, 6); 
+            sounds.at(ENEMY_01_SHOT).play();
+            break;
+        case 2:  
+            create_animation(prj.anim, id, tex, tex.getSize().x, tex.getSize().y); 
+            sounds.at(ENEMY_02_SHOT).play();
+            break;
+        case 3:  
+            create_animation(prj.anim, id, tex, tex.getSize().x, tex.getSize().y); 
+            sounds.at(ENEMY_03_13_SHOT).play();
+            break;
+        case 5:  
+            create_animation(prj.anim, id, tex, 40, 50, 4, 6); 
+            sounds.at(ENEMY_05_SHOT).play();
+            break;
+        case 6:  
+            create_animation(prj.anim, id, tex, 34, 50, 4, 6); 
+            sounds.at(ENEMY_06_SHOT).play();
+            break;
+        case 7:  
+            create_animation(prj.anim, id, tex, 18, 21, 4, 6); 
+            sounds.at(ENEMY_07_SHOT).play();
+            break;
+        case 8:  
+            create_animation(prj.anim, id, tex, tex.getSize().x, tex.getSize().y); 
+            sounds.at(ENEMY_08_SHOT).play();
+            break;
+        case 9:  
+            create_animation(prj.anim, id, tex, 50, 35, 2, 6); 
+            sounds.at(ENEMY_09_LAUNCH).play();
+            break;
+        case 13: 
+            create_animation(prj.anim, id, tex, tex.getSize().x, tex.getSize().y); 
+            sounds.at(ENEMY_03_13_SHOT).play();
+            break;
     }
     projectiles.push_back(prj);
     return projectiles[projectiles.size()-1];
+}
+
+void move_projectile(Projectile & prj, float dt)
+{
+    prj.anim.sprite.value().move(prj.velocity * dt);
+    if (prj.anim.id == 9 && sounds.at(ENEMY_09_SHOT).getStatus() != sf::SoundSource::Status::Playing)
+    {
+        sounds.at(ENEMY_09_SHOT).play();
+    }
 }
 
 void collision_projectile_wall(Projectile & prj, Animation & wall, const Assets & assets)
@@ -38,8 +74,18 @@ void collision_projectile_wall(Projectile & prj, Animation & wall, const Assets 
 
         if (prj.anim.id == 1 || prj.anim.id == 5 || prj.anim.id == 6 || prj.anim.id == 8 || prj.anim.id == 9)
         {
-            sound_boom.value().play();
+            sounds.at(BOOM).play();
             create_explosion(prj.anim.sprite.value().getPosition(), assets);
+        }
+
+        if (prj.anim.id == 8)
+        {
+            sounds.at(ENEMY_08_SHOT).stop();
+        }
+
+        if (prj.anim.id == 9)
+        {
+            sounds.at(ENEMY_09_SHOT).stop();
         }
     }
 }
@@ -59,10 +105,22 @@ void collision_projectile_ship(Projectile & prj, Ship & ship, const Assets & ass
             ship.shield -= 10;
         }
 
+        sounds.at(HIT_SHIP).play();
+
         if (prj.anim.id == 1 || prj.anim.id == 5 || prj.anim.id == 6 || prj.anim.id == 8 || prj.anim.id == 9)
         {
-            sound_boom.value().play();
+            sounds.at(BOOM).play();
             create_explosion(prj.anim.sprite.value().getPosition(), assets);
+        }
+
+        if (prj.anim.id == 8)
+        {
+            sounds.at(ENEMY_08_SHOT).stop();
+        }
+
+        if (prj.anim.id == 9)
+        {
+            sounds.at(ENEMY_09_SHOT).stop();
         }
     }
 }
@@ -75,6 +133,16 @@ void projectile_check_bounds(Projectile & prj)
         prj.anim.sprite.value().getPosition().y > EDGE_BOTTOM - prj.anim.half_size.y)
     {
         prj.anim.isAlive = false;
+
+        if (prj.anim.id == 8)
+        {
+            sounds.at(ENEMY_08_SHOT).stop();
+        }
+
+        if (prj.anim.id == 9)
+        {
+            sounds.at(ENEMY_09_SHOT).stop();
+        }
     }   
 }
 

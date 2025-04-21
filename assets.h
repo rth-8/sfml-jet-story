@@ -6,8 +6,26 @@
 enum SoundTypes
 {
     DAMAGE,
-    HIT,
+    HIT_ENEMY,
+    HIT_SHIP,
     BOOM,
+    BOOM_BASE,
+    GET_ITEM,
+    CANNON_SHOT,
+    SPECIAL_LAUNCH,
+    BALL_BOUNCE,
+    ENEMY_01_SHOT,
+    ENEMY_02_SHOT,
+    ENEMY_03_13_SHOT,
+    ENEMY_05_SHOT,
+    ENEMY_06_SHOT,
+    ENEMY_07_SHOT,
+    ENEMY_08_SHOT,
+    ENEMY_09_LAUNCH,
+    ENEMY_09_SHOT,
+    ENEMY_10_SPAWN,
+    DEATH,
+    LAST,
 };
 
 struct Assets
@@ -93,8 +111,25 @@ void load_misc_textures(Assets & assets)
 void load_sounds(Assets & assets)
 {
     assets.sounds.insert({DAMAGE, sf::SoundBuffer("./sounds/damage.wav")});
-    assets.sounds.insert({HIT, sf::SoundBuffer("./sounds/enemy_damage.wav")});
+    assets.sounds.insert({HIT_ENEMY, sf::SoundBuffer("./sounds/enemy_damage.wav")});
+    assets.sounds.insert({HIT_SHIP, sf::SoundBuffer("./sounds/ship_damage.wav")});
     assets.sounds.insert({BOOM, sf::SoundBuffer("./sounds/boom.wav")});
+    assets.sounds.insert({BOOM_BASE, sf::SoundBuffer("./sounds/boom_base.wav")});
+    assets.sounds.insert({GET_ITEM, sf::SoundBuffer("./sounds/get_item.wav")});
+    assets.sounds.insert({CANNON_SHOT, sf::SoundBuffer("./sounds/ship_cannon_shot.wav")});
+    assets.sounds.insert({SPECIAL_LAUNCH, sf::SoundBuffer("./sounds/special_launch.wav")});
+    assets.sounds.insert({BALL_BOUNCE, sf::SoundBuffer("./sounds/ball_bounce.wav")});
+    assets.sounds.insert({ENEMY_01_SHOT, sf::SoundBuffer("./sounds/enemy_01_shot.wav")});
+    assets.sounds.insert({ENEMY_02_SHOT, sf::SoundBuffer("./sounds/enemy_02_shot.wav")});
+    assets.sounds.insert({ENEMY_03_13_SHOT, sf::SoundBuffer("./sounds/enemy_03_13_shot.wav")});
+    assets.sounds.insert({ENEMY_05_SHOT, sf::SoundBuffer("./sounds/enemy_05_shot.wav")});
+    assets.sounds.insert({ENEMY_06_SHOT, sf::SoundBuffer("./sounds/enemy_06_shot.wav")});
+    assets.sounds.insert({ENEMY_07_SHOT, sf::SoundBuffer("./sounds/enemy_07_shot.wav")});
+    assets.sounds.insert({ENEMY_08_SHOT, sf::SoundBuffer("./sounds/enemy_08_shot.wav")});
+    assets.sounds.insert({ENEMY_09_LAUNCH, sf::SoundBuffer("./sounds/enemy_09_launch.wav")});
+    assets.sounds.insert({ENEMY_09_SHOT, sf::SoundBuffer("./sounds/enemy_09_shot.wav")});
+    assets.sounds.insert({ENEMY_10_SPAWN, sf::SoundBuffer("./sounds/enemy_10.wav")});
+    assets.sounds.insert({DEATH, sf::SoundBuffer("./sounds/death.wav")});
 }
 
 #endif
