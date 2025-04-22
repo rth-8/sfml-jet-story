@@ -221,17 +221,17 @@ int main()
         bool anyCollision = false;
         for (auto & enemy_o : room_o.enemies)
         {
-            if (collision_enemy_ship(enemy_o, ship_o, assets))
+            if (collision_enemy_ship(enemy_o, maze_o, ship_o, assets))
             {
                 anyCollision = true;
             }
             if (ship_o.cannon.has_value())
             {
-                collision_enemy_cannon(enemy_o, ship_o, assets);
+                collision_enemy_cannon(enemy_o, maze_o, ship_o, assets);
             }
             if (ship_o.special.has_value())
             {
-                collision_enemy_special(enemy_o, ship_o, assets);
+                collision_enemy_special(enemy_o, maze_o, ship_o, assets);
             }
             enemy_check_bounds(enemy_o);
         }
@@ -311,9 +311,27 @@ int main()
 
         update_infobar(infobar, maze_o, ship_o, assets, game_frame);
 
+        if (flashing_counter > 0)
+        {
+            flashing_counter -= FLASH_SPD * dtAsSeconds;
+            if (flashing_counter <= 0) flashing_counter = 0;
+        }
+
         // render
 
-        window.clear();
+        if (flashing_counter == 0)
+        {
+            window.clear();
+        }
+        else
+        if (flashing_counter < FLASH_MID)
+        {
+            window.clear(sf::Color::Yellow);
+        }
+        else
+        {
+            window.clear(sf::Color::White);
+        }
 
         draw_infobar(window, infobar);
 

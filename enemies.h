@@ -512,7 +512,7 @@ void collision_enemy_wall(Enemy & enemy, Animation & wall)
     }
 }
 
-bool collision_enemy_ship(Enemy & enemy, Ship & ship, const Assets & assets)
+bool collision_enemy_ship(Enemy & enemy, Maze & maze, Ship & ship, const Assets & assets)
 {
     bool result = false;
 
@@ -529,7 +529,9 @@ bool collision_enemy_ship(Enemy & enemy, Ship & ship, const Assets & assets)
                 sounds.at(DAMAGE).stop();
                 if (enemy.anim.id == 0)
                 {
+                    maze.base_cnt--;
                     sounds.at(BOOM_BASE).play();
+                    flashing_counter = FLASH_MAX;
                 }
                 else
                 {
@@ -564,7 +566,9 @@ bool collision_enemy_ship(Enemy & enemy, Ship & ship, const Assets & assets)
                     sounds.at(DAMAGE).stop();
                     if (enemy.carried_enemy.value().id == 0)
                     {
+                        maze.base_cnt--;
                         sounds.at(BOOM_BASE).play();
+                        flashing_counter = FLASH_MAX;
                     }
                     else
                     {
@@ -590,7 +594,7 @@ bool collision_enemy_ship(Enemy & enemy, Ship & ship, const Assets & assets)
     return result;
 }
 
-void collision_enemy_cannon(Enemy & enemy, Ship & ship, const Assets & assets)
+void collision_enemy_cannon(Enemy & enemy, Maze & maze, Ship & ship, const Assets & assets)
 {
     if (checkCollision(enemy.anim, ship.cannon.value()))
     {
@@ -602,7 +606,9 @@ void collision_enemy_cannon(Enemy & enemy, Ship & ship, const Assets & assets)
             enemy.anim.isAlive = false;
             if (enemy.anim.id == 0)
             {
+                maze.base_cnt--;
                 sounds.at(BOOM_BASE).play();
+                flashing_counter = FLASH_MAX;
             }
             else
             {
@@ -623,7 +629,9 @@ void collision_enemy_cannon(Enemy & enemy, Ship & ship, const Assets & assets)
             {
                 if (enemy.carried_enemy.value().id == 0)
                 {
+                    maze.base_cnt--;
                     sounds.at(BOOM_BASE).play();
+                    flashing_counter = FLASH_MAX;
                 }
                 else
                 {
@@ -636,7 +644,7 @@ void collision_enemy_cannon(Enemy & enemy, Ship & ship, const Assets & assets)
     }
 }
 
-void collision_enemy_special(Enemy & enemy, Ship & ship, const Assets & assets)
+void collision_enemy_special(Enemy & enemy, Maze & maze, Ship & ship, const Assets & assets)
 {
     if (checkCollision(enemy.anim, ship.special.value()))
     {
@@ -648,7 +656,9 @@ void collision_enemy_special(Enemy & enemy, Ship & ship, const Assets & assets)
         enemy.anim.isAlive = false;
         if (enemy.anim.id == 0)
         {
+            maze.base_cnt--;
             sounds.at(BOOM_BASE).play();
+            flashing_counter = FLASH_MAX;
         }
         else
         {
@@ -668,7 +678,9 @@ void collision_enemy_special(Enemy & enemy, Ship & ship, const Assets & assets)
             }
             if (enemy.carried_enemy.value().id == 0)
             {
+                maze.base_cnt--;
                 sounds.at(BOOM_BASE);
+                flashing_counter = FLASH_MAX;
             }
             else
             {

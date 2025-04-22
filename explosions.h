@@ -1,6 +1,10 @@
 #ifndef EXPLOSIONS_H
 #define EXPLOSIONS_H
 
+#define FLASH_MAX 10
+#define FLASH_MID 5
+#define FLASH_SPD 20
+
 typedef struct {
     Animation anim;
     sf::Vector2f velocity;
@@ -9,6 +13,7 @@ Fragment;
 
 std::vector<Animation> explosions;
 std::vector<Fragment> fragments;
+float flashing_counter = 0;
 
 void create_fragment(const sf::Vector2f & pos, const sf::Vector2f & velocity, const Assets & assets)
 {
