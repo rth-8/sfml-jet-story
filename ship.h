@@ -6,10 +6,6 @@
 #define SPECIAL_BALL_LIFESPAN 12
 #define SPECIAL_STAR_LIFESPAN 12
 
-#define HEALTH_MAX 1000.0f
-#define FUEL_MAX 1000.0f
-#define AMMO_MAX 1000
-
 void create_ship(Ship & ship, const sf::Vector2f & pos, const Assets & assets)
 {
     create_animation(ship.ship_body, 0, assets.ship, assets.ship.getSize().x, assets.ship.getSize().y);
@@ -32,6 +28,8 @@ void create_ship(Ship & ship, const sf::Vector2f & pos, const Assets & assets)
     ship.next_special = INT_MAX;
     ship.special_ammo = 4;
 
+    ship.score = 0;
+    
     ship.thrust_up = false;
     ship.thrust_horiz = false;
 }

@@ -45,7 +45,10 @@ struct Assets
     sf::Texture special_star;
     sf::Texture explosion;
     sf::Texture fragment;
+    sf::Texture infobar;
+    sf::Texture loadscr;
     std::map<SoundTypes, sf::SoundBuffer> sounds;
+    sf::Font font;
 };
 
 void load_wall_textures(Assets & assets)
@@ -106,6 +109,8 @@ void load_misc_textures(Assets & assets)
 {
     if (!assets.explosion.loadFromFile("./images/misc/boom.png")) std::cerr << "Failed to load boom.png!";
     if (!assets.fragment.loadFromFile("./images/misc/fragment.png")) std::cerr << "Failed to load fragment.png!";
+    if (!assets.infobar.loadFromFile("./images/misc/infobar.png")) std::cerr << "Failed to load infobar.png!";
+    if (!assets.loadscr.loadFromFile("./images/misc/loadscr.png")) std::cerr << "Failed to load loadscr.png!";
 }
 
 void load_sounds(Assets & assets)
@@ -130,6 +135,11 @@ void load_sounds(Assets & assets)
     assets.sounds.insert({ENEMY_09_SHOT, sf::SoundBuffer("./sounds/enemy_09_shot.wav")});
     assets.sounds.insert({ENEMY_10_SPAWN, sf::SoundBuffer("./sounds/enemy_10.wav")});
     assets.sounds.insert({DEATH, sf::SoundBuffer("./sounds/death.wav")});
+}
+
+void load_font(Assets & assets)
+{
+    if (!assets.font.openFromFile("./fonts/normal.ttf")) std::cerr << "Failed to load normal.ttf!";
 }
 
 #endif

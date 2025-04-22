@@ -27,6 +27,7 @@
 #include "maze_data.h"
 #include "animation.h"
 #include "maze_structures.h"
+#include "infobar.h"
 #include "physics.h"
 #include "explosions.h"
 #include "projectiles.h"
@@ -67,6 +68,7 @@ int main()
     load_enemy_shot_textures(assets);
     load_misc_textures(assets);
     load_sounds(assets);
+    load_font(assets);
     
     MazeData maze;
     load_maze(maze);
@@ -78,6 +80,9 @@ int main()
     create_ship(ship_o, {200,310}, assets);
 
     create_sounds(assets);
+
+    InfoBar infobar;
+    create_infobar(infobar, assets);
 
     while (window.isOpen())
     {
@@ -105,6 +110,7 @@ int main()
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
         {
             ship_o.velocity.y -= ACCEL_VERT * dtAsSeconds;
+            ship_o.fuel -= FUEL_SUB * dtAsSeconds;
             ship_o.thrust_up = true;
         }
 
@@ -122,6 +128,7 @@ int main()
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
         {
             ship_o.velocity.x -= ACCEL_HORIZ * dtAsSeconds;
+            ship_o.fuel -= FUEL_SUB * dtAsSeconds;
             ship_o.ship_body.sprite.value().setScale({-1, 1});
             ship_o.thrust_horiz = true;
         }
@@ -129,6 +136,7 @@ int main()
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
         {
             ship_o.velocity.x += ACCEL_HORIZ * dtAsSeconds;
+            ship_o.fuel -= FUEL_SUB * dtAsSeconds;
             ship_o.ship_body.sprite.value().setScale({1, 1});
             ship_o.thrust_horiz = true;
         }
@@ -301,10 +309,14 @@ int main()
             fg.anim.counter++;
         }
 
+        update_infobar(infobar, maze_o, ship_o, assets, game_frame);
+
         // render
 
         window.clear();
-        
+
+        draw_infobar(window, infobar);
+
         window.draw(ship_o.ship_body.sprite.value());
         if (ship_o.thrust_horiz)
         {

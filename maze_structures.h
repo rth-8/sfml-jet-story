@@ -26,16 +26,23 @@ typedef struct
     int current_room_row = 0;
     int current_room_col = 0;
     std::vector<Room> rooms;
+    int base_cnt = 0;
 }
 Maze;
 
 enum SpecialType
 {
+    NONE,
     BALL,
     MISSILE_SIDE,
     MISSILE_DOWN,
     STAR,
 };
+
+#define HEALTH_MAX 1000
+#define FUEL_MAX 1000
+#define AMMO_MAX 1000
+#define FUEL_SUB 8
 
 typedef struct
 {
@@ -46,8 +53,9 @@ typedef struct
     sf::Vector2f previous_position;
     sf::Vector2f velocity;
     int shield;
-    int fuel;
+    float fuel;
     int damage_delay;
+    int score;
 
     std::optional<Animation> cannon;
     sf::Vector2f cannon_previous_position;

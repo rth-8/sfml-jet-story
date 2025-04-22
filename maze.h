@@ -1,7 +1,7 @@
 #ifndef MAZE_H
 #define MAZE_H
 
-void create_room(Room & ro, const RoomData & room, const Assets & assets)
+void create_room(Room & ro, Maze & mo, const RoomData & room, const Assets & assets)
 {
     for (int i=0; i<room.walls.size(); ++i)
     {
@@ -34,6 +34,17 @@ void create_room(Room & ro, const RoomData & room, const Assets & assets)
     {
         Enemy eo;
         create_enemy(eo, room.enemies[i], assets);
+        if (eo.anim.id == 0)
+        {
+            mo.base_cnt++;
+        }
+        if (eo.anim.id == 20 && eo.carried_enemy.has_value())
+        {
+            if (eo.carried_enemy.value().id == 0)
+            {
+                mo.base_cnt++;
+            }
+        }
         ro.enemies.push_back(eo);
     }
 }
@@ -43,9 +54,10 @@ void create_maze(Maze & mo, const MazeData & maze, const Assets & assets)
     for (const auto & room : maze.rooms)
     {
         Room ro;
-        create_room(ro, room, assets);
+        create_room(ro, mo, room, assets);
         mo.rooms.push_back(ro);
     }
+    // std::cout << "Bases: " << mo.base_cnt << "\n";
 }
 
 Room & get_current_room(Maze & mo)
