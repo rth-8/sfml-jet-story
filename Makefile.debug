@@ -1,8 +1,40 @@
-build:
-	c++ main.cpp -o js.exe -std=c++20 -O0 -ggdb -IC:/SFML-3.0.0/include -LC:/SFML-3.0.0/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+CXX=c++
+OUTPUT=js.exe
 
-run:
-	js.exe
+SFML_DIR=c:/SFML-3.0.0
+
+CXX_FLAGS=-O0 -ggdb -std=c++20 -Wall -Werror
+INCLUDES=-I$(SFML_DIR)/include
+LDFLAGS=-L$(SFML_DIR)/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+
+OBJECTS=\
+	maze_data.o \
+	assets.o \
+	sounds.o \
+	animation.o \
+	physics.o \
+	explosions.o \
+	ship.o \
+	projectiles.o \
+	enemies.o \
+	maze.o \
+	infobar.o \
+	main.o
+
+all: $(OUTPUT)
+
+$(OUTPUT): $(OBJECTS)
+	$(info "Link...")
+	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
+
+%.o: %.cpp %.h
+	$(info "Build...")
+	$(CXX) -c $(CXX_FLAGS) $(INCLUDES) $< -o $@
+
+main.o: main.cpp
+	$(info "Build...")
+	$(CXX) -c $(CXX_FLAGS) $(INCLUDES) $< -o $@
 
 clean:
-	del js.exe
+	del $(OBJECTS)
+	del $(OUTPUT)

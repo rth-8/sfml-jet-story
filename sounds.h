@@ -1,18 +1,15 @@
 #ifndef SOUNDS_H
 #define SOUNDS_H
 
-std::map<SoundTypes, sf::Sound> sounds;
+#include <map>
+#include <SFML/Audio/Sound.hpp>
+#include "assets.h"
 
-void create_sounds(Assets & assets)
+struct Sounds
 {
-    for (int i = DAMAGE; i != LAST; i++)
-    {
-        SoundTypes t = static_cast<SoundTypes>(i);
-        sounds.insert({t, sf::Sound(assets.sounds.at(t))});
-    }
-    sounds.at(DAMAGE).setLooping(true);
-    sounds.at(ENEMY_08_SHOT).setLooping(true);
-    sounds.at(ENEMY_09_SHOT).setLooping(true);
-}
+    std::map<SoundTypes, sf::Sound> sounds;
+};
+
+void create_sounds(Sounds & sounds, Assets & assets);
 
 #endif
