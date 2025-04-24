@@ -40,11 +40,11 @@ int main()
     load_sounds(assets);
     load_font(assets);
     
-    MazeData maze;
-    load_maze(maze);
+    MazeData maze_d;
+    load_maze(maze_d);
     
     Maze maze_o;
-    create_maze(maze_o, maze, assets);
+    create_maze(maze_o, maze_d, assets);
     
     Ship ship_o;
     create_ship(ship_o, {200,310}, assets);
@@ -150,7 +150,7 @@ int main()
 
         for (auto & enemy_o : room_o.enemies)
         {
-            move_enemy(room_o, enemy_o, projectiles_o, explosions_o, sounds_o, ship_o, assets, dtAsSeconds, game_frame);
+            move_enemy(room_o, enemy_o, projectiles_o, explosions_o, sounds_o, ship_o, maze_d, assets, dtAsSeconds, game_frame);
         }
 
         for (auto & prj : projectiles_o.projectiles)

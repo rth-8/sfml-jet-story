@@ -42,15 +42,24 @@ struct RoomData
     std::vector<EnemyData> enemies;
 };
 
+struct EnemySpec
+{
+    int health;
+    float shooting_delay;
+    float shooting_speed;
+};
+
 struct MazeData
 {
     std::vector<RoomData> rooms;
+    std::vector<EnemySpec> enemy_specs;
 };
 
 void load_walls(RoomData & room, const int & row, const int & col);
 void load_items(RoomData & room, const int & row, const int & col);
 void load_enemies(RoomData & room, const int & row, const int & col);
 void load_room(RoomData & room, const int & row, const int & col);
+void load_enemy_specs(MazeData & maze);
 void load_maze(MazeData & maze);
 
 #endif

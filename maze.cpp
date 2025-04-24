@@ -3,7 +3,7 @@
 #include "assets.h"
 #include "zx_colors.h"
 
-void create_room(Room & ro, Maze & mo, const RoomData & room, const Assets & assets)
+void create_room(Room & ro, Maze & mo, const RoomData & room, const MazeData & maze, const Assets & assets)
 {
     for (size_t i=0; i<room.walls.size(); ++i)
     {
@@ -35,7 +35,7 @@ void create_room(Room & ro, Maze & mo, const RoomData & room, const Assets & ass
     for (size_t i=0; i<room.enemies.size(); ++i)
     {
         Enemy eo;
-        create_enemy(eo, room.enemies[i], assets);
+        create_enemy(eo, room.enemies[i], maze, assets);
         if (eo.anim.id == 0)
         {
             mo.base_cnt++;
@@ -56,7 +56,7 @@ void create_maze(Maze & mo, const MazeData & maze, const Assets & assets)
     for (const auto & room : maze.rooms)
     {
         Room ro;
-        create_room(ro, mo, room, assets);
+        create_room(ro, mo, room, maze, assets);
         mo.rooms.push_back(ro);
     }
     // std::cout << "Bases: " << mo.base_cnt << "\n";

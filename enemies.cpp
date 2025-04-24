@@ -1,5 +1,6 @@
 #include "enemies.h"
 
+#include <iostream>
 #include <set>
 
 #include "common.h"
@@ -17,7 +18,6 @@
 #define SPAWN_INTERVAL 500
 
 const std::set<int> non_animated{0, 1, 2, 3, 4, 5, 6, 8, 11, 18};
-const std::array<int, 21> healths{200, 60, 90, 30, 200, 90, 90, 90, 20, 90, 90, 10, 10, 10, 10, 10, 10, 10, 50, 50, 10};
 
 sf::Vector2f enemy_get_size(Enemy & enemy)
 {
@@ -123,22 +123,22 @@ void create_enemy_anim(Animation & anim, const int & id, const int & subid, cons
 21  carrier                 moving
 */
 
-void create_enemy(Enemy & eo, const EnemyData & enemy, const Assets & assets)
+void create_enemy(Enemy & eo, const EnemyData & ed, const MazeData & md, const Assets & assets)
 {
-    create_enemy_anim(eo.anim, enemy.id, enemy.subid, assets);
+    create_enemy_anim(eo.anim, ed.id, ed.subid, assets);
 
     if (eo.anim.sprite.has_value())
     {
         eo.anim.sprite.value().setPosition(
-            {static_cast<float>(enemy.x) + eo.anim.half_size.x, 
-             static_cast<float>(enemy.y) + eo.anim.half_size.y + 100});
+            {static_cast<float>(ed.x) + eo.anim.half_size.x, 
+             static_cast<float>(ed.y) + eo.anim.half_size.y + 100});
 
-        if ((enemy.id == 1 || enemy.id == 8) && enemy.subid == 0)
+        if ((ed.id == 1 || ed.id == 8) && ed.subid == 0)
         {
             eo.anim.sprite.value().setScale({-1.0f, 1.0f});
         }
 
-        if (enemy.id == 15 || enemy.id == 16)
+        if (ed.id == 15 || ed.id == 16)
         {
             eo.velocity = {200.0f, 200.0f};
         }
@@ -148,17 +148,17 @@ void create_enemy(Enemy & eo, const EnemyData & enemy, const Assets & assets)
         eo.anim.sprite.value().setColor(zx_colors[eo.anim.color_index]);
     }
 
-    if (enemy.carried_enemy.has_value())
+    if (ed.carried_enemy.has_value())
     {
         eo.carried_enemy = std::make_optional<Animation>();
-        create_enemy_anim(eo.carried_enemy.value(), enemy.carried_enemy.value().id, enemy.carried_enemy.value().subid, assets);
+        create_enemy_anim(eo.carried_enemy.value(), ed.carried_enemy.value().id, ed.carried_enemy.value().subid, assets);
 
         eo.carried_enemy.value().sprite.value().setPosition(
-            {static_cast<float>(enemy.carried_enemy.value().x) + eo.carried_enemy.value().half_size.x, 
-             static_cast<float>(enemy.carried_enemy.value().y) + eo.carried_enemy.value().half_size.y + 100});
+            {static_cast<float>(ed.carried_enemy.value().x) + eo.carried_enemy.value().half_size.x, 
+             static_cast<float>(ed.carried_enemy.value().y) + eo.carried_enemy.value().half_size.y + 100});
 
-        if ((enemy.carried_enemy.value().id == 1 || enemy.carried_enemy.value().id == 8) && 
-            enemy.carried_enemy.value().subid == 0)
+        if ((ed.carried_enemy.value().id == 1 || ed.carried_enemy.value().id == 8) && 
+            ed.carried_enemy.value().subid == 0)
         {
             eo.carried_enemy.value().sprite.value().setScale({-1.0f, 1.0f});
         }
@@ -167,111 +167,121 @@ void create_enemy(Enemy & eo, const EnemyData & enemy, const Assets & assets)
         eo.carried_enemy.value().sprite.value().setColor(zx_colors[eo.anim.color_index]);
     }
 
-    if (enemy.carried_item.has_value())
+    if (ed.carried_item.has_value())
     {
         eo.carried_item = std::make_optional<Animation>();
-        const sf::Texture & tex = assets.items[enemy.carried_item.value().id];
-        create_animation(eo.carried_item.value(), enemy.carried_item.value().id, tex, tex.getSize().x, tex.getSize().y);
+        const sf::Texture & tex = assets.items[ed.carried_item.value().id];
+        create_animation(eo.carried_item.value(), ed.carried_item.value().id, tex, tex.getSize().x, tex.getSize().y);
         eo.carried_item.value().sprite.value().setPosition(
-            {static_cast<float>(enemy.carried_item.value().x) + eo.carried_item.value().half_size.x, 
-             static_cast<float>(enemy.carried_item.value().y) + eo.carried_item.value().half_size.y + 100 + 6});
+            {static_cast<float>(ed.carried_item.value().x) + eo.carried_item.value().half_size.x, 
+             static_cast<float>(ed.carried_item.value().y) + eo.carried_item.value().half_size.y + 100 + 6});
         eo.carried_item.value().color_index = 0;
     }
 
-    eo.health = healths[eo.anim.id];
-    if (enemy.carried_enemy.has_value())
+    eo.health = md.enemy_specs[eo.anim.id].health;
+    eo.shooting_delay = md.enemy_specs[eo.anim.id].shooting_delay;
+    eo.shooting_speed = md.enemy_specs[eo.anim.id].shooting_speed;
+    eo.shooting_counter = 0;
+
+    if (ed.carried_enemy.has_value())
     {
-        eo.carried_enemy_health = healths[enemy.carried_enemy.value().id];
+        eo.carried_enemy_health = md.enemy_specs[ed.carried_enemy.value().id].health;
+        eo.shooting_delay = md.enemy_specs[ed.carried_enemy.value().id].shooting_delay;
+        eo.shooting_speed = md.enemy_specs[ed.carried_enemy.value().id].shooting_speed;
+        eo.shooting_counter = 0;
     }
 }
 
-void shooting_horizontal(Animation & enemyAnim, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
-    const Ship & ship, const Assets & assets, float dt, int gFrame)
+void shooting_horizontal(Enemy & enemy, Animation & enemyAnim, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
+    const Ship & ship, const Assets & assets, float dt)
 {
-    if (enemyAnim.id == 1)
+    if (ship.ship_body.sprite.value().getPosition().y > enemyAnim.sprite.value().getPosition().y - 25.0 &&
+        ship.ship_body.sprite.value().getPosition().y < enemyAnim.sprite.value().getPosition().y + 25.0)
     {
-        if (gFrame % 8 == 0)
+        if (enemy.shooting_counter <= 0)
         {
-            if (ship.ship_body.sprite.value().getPosition().y > enemyAnim.sprite.value().getPosition().y - 25.0 &&
-                ship.ship_body.sprite.value().getPosition().y < enemyAnim.sprite.value().getPosition().y + 25.0)
+            if (enemyAnim.id == 1)
             {
                 auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
                 prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
                 prj.velocity = {300.0f * enemyAnim.sprite.value().getScale().x, 0.0f};
             }
-        }
-    }
-    else
-    if (enemyAnim.id == 3 || enemyAnim.id == 13)
-    {
-        if (gFrame % 100 == 0)
-        {
-            if (ship.ship_body.sprite.value().getPosition().y > enemyAnim.sprite.value().getPosition().y - 25.0 &&
-                ship.ship_body.sprite.value().getPosition().y < enemyAnim.sprite.value().getPosition().y + 25.0)
+            else
+            if (enemyAnim.id == 3 || enemyAnim.id == 13)
             {
                 auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
                 prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
                 prj.velocity = {200.0f * enemyAnim.sprite.value().getScale().x, 0.0f};
             }
+            else
+            if (enemyAnim.id == 9)
+            {
+                auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
+                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
+                if (ship.ship_body.sprite.value().getPosition().x < enemyAnim.sprite.value().getPosition().x)
+                {
+                    prj.anim.sprite.value().setScale({-1.0, 1.0});
+                    prj.velocity = {-150.0f, 0.0f};
+                }
+                else
+                {
+                    prj.anim.sprite.value().setScale({1.0, 1.0});
+                    prj.velocity = {150.0f, 0.0f};
+                }
+                enemyAnim.isAlive = false;
+                create_explosion(explosions, enemyAnim.sprite.value().getPosition(), assets);
+            }
+
+            enemy.shooting_counter = enemy.shooting_delay;
+        }
+        else
+        {
+            enemy.shooting_counter -= enemy.shooting_speed * dt;
         }
     }
     else
-    if (enemyAnim.id == 9)
     {
-        if (ship.ship_body.sprite.value().getPosition().y > enemyAnim.sprite.value().getPosition().y - 25.0 &&
-            ship.ship_body.sprite.value().getPosition().y < enemyAnim.sprite.value().getPosition().y + 25.0)
-        {
-            auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
-            prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
-            if (ship.ship_body.sprite.value().getPosition().x < enemyAnim.sprite.value().getPosition().x)
-            {
-                prj.anim.sprite.value().setScale({-1.0, 1.0});
-                prj.velocity = {-150.0f, 0.0f};
-            }
-            else
-            {
-                prj.anim.sprite.value().setScale({1.0, 1.0});
-                prj.velocity = {150.0f, 0.0f};
-            }
-            enemyAnim.isAlive = false;
-            create_explosion(explosions, enemyAnim.sprite.value().getPosition(), assets);
-        }
+        enemy.shooting_counter = 0;
     }
 }
 
-void shooting_vertical(Animation & enemyAnim, Projectiles & projectiles, Sounds & sounds, const Ship & ship, const Assets & assets, float dt, int gFrame)
+void shooting_vertical(Enemy & enemy, Animation & enemyAnim, Projectiles & projectiles, Sounds & sounds, 
+    const Ship & ship, const Assets & assets, float dt)
 {
-    if (enemyAnim.id == 5)
+    if (ship.ship_body.sprite.value().getPosition().x > enemyAnim.sprite.value().getPosition().x - 25.0 &&
+        ship.ship_body.sprite.value().getPosition().x < enemyAnim.sprite.value().getPosition().x + 25.0)
     {
-        if (gFrame % 20 == 0)
+        if (enemy.shooting_counter <= 0)
         {
-            if (ship.ship_body.sprite.value().getPosition().x > enemyAnim.sprite.value().getPosition().x - 25.0 &&
-                ship.ship_body.sprite.value().getPosition().x < enemyAnim.sprite.value().getPosition().x + 25.0)
+            if (enemyAnim.id == 5)
             {
                 auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
                 prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
                 prj.velocity = {0.0f, -220.0f};
             }
-        }
-    }
-    else
-    if (enemyAnim.id == 6)
-    {
-        if (gFrame % 30 == 0)
-        {
-            if (ship.ship_body.sprite.value().getPosition().x > enemyAnim.sprite.value().getPosition().x - 25.0 &&
-                ship.ship_body.sprite.value().getPosition().x < enemyAnim.sprite.value().getPosition().x + 25.0)
+            else
+            if (enemyAnim.id == 6)
             {
                 auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
                 prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
                 prj.velocity = {0.0f, 100.0f};
             }
+
+            enemy.shooting_counter = enemy.shooting_delay;
         }
+        else
+        {
+            enemy.shooting_counter -= enemy.shooting_speed * dt;
+        }
+    }
+    else
+    {
+        enemy.shooting_counter = 0;
     }
 }
 
 void shooting_diagonal(Animation & enemyAnim, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
-    const Ship & ship, const Assets & assets, float dt, int gFrame)
+    const Ship & ship, const Assets & assets, float dt)
 {
     if (enemyAnim.id == 8)
     {
@@ -306,15 +316,21 @@ void shooting_diagonal(Animation & enemyAnim, Projectiles & projectiles, Explosi
     }
 }
 
-void shooting_tracking(Animation & enemyAnim, Projectiles & projectiles, Sounds & sounds, 
-    const Ship & ship, const Assets & assets, float dt, int gFrame)
+void shooting_tracking(Enemy & enemy, Animation & enemyAnim, Projectiles & projectiles, Sounds & sounds, 
+    const Ship & ship, const Assets & assets, float dt)
 {
-    if (gFrame % 100 == 0)
+    if (enemy.shooting_counter <= 0)
     {
         auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
         prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
         prj.velocity = ship.ship_body.sprite.value().getPosition() - enemyAnim.sprite.value().getPosition();
         prj.velocity = prj.velocity.normalized() * 200.0f;
+
+        enemy.shooting_counter = enemy.shooting_delay;
+    }
+    else
+    {
+        enemy.shooting_counter -= enemy.shooting_speed * dt;
     }
 }
 
@@ -356,20 +372,45 @@ void move_enemy_constant(Enemy & enemy, float dt)
     enemy.anim.sprite.value().move(enemy.velocity * dt);
 }
 
-void move_enemy_carried_element(Enemy & enemy, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
-    const Ship & ship, const Assets & assets, float dt, int gFrame)
+void spawn_enemy(Room & room, const Enemy & spawner, Sounds & sounds, const MazeData & md, const Assets & assets, int gFrame)
+{
+    if (gFrame % SPAWN_INTERVAL == 0)
+    {
+        int id = std::rand() % (17-11+1) + 11;
+        Enemy eo;
+        create_enemy_anim(eo.anim, id, 0, assets);
+        eo.anim.sprite.value().setPosition(spawner.anim.sprite.value().getPosition());
+        if (id == 15 || id == 16)
+        {
+            eo.velocity = {200.0f, 200.0f};
+        }
+        eo.anim.color_index = std::rand()%7+9;
+        eo.anim.sprite.value().setColor(zx_colors[eo.anim.color_index]);
+        eo.health = md.enemy_specs[id].health;
+        eo.shooting_delay = md.enemy_specs[id].shooting_delay;
+        eo.shooting_speed = md.enemy_specs[id].shooting_speed;
+        room.enemies.push_back(eo);
+        sounds.sounds.at(ENEMY_10_SPAWN).play();
+    }
+}
+
+void move_enemy_carried_element(Room & room, Enemy & enemy, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
+    const Ship & ship, const MazeData & md, const Assets & assets, float dt, int gFrame)
 {
     if (enemy.carried_enemy.has_value())
     {
         switch (enemy.carried_enemy.value().id)
         {
-            case 1: shooting_horizontal(enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt, gFrame); break;
-            case 2: shooting_tracking(enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt, gFrame); break;
-            case 3: shooting_horizontal(enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt, gFrame); break;
-            case 5: shooting_vertical(enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt, gFrame); break;
-            case 7: shooting_tracking(enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt, gFrame); break;
-            case 8: shooting_diagonal(enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt, gFrame); break;
-            case 9: shooting_horizontal(enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt, gFrame); break;
+            case 1: shooting_horizontal(enemy, enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
+            case 2: shooting_tracking(enemy, enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt); break;
+            case 3: shooting_horizontal(enemy, enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
+            case 5: shooting_vertical(enemy, enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt); break;
+            case 7: shooting_tracking(enemy, enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt); break;
+            case 8: shooting_diagonal(enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
+            case 9: shooting_horizontal(enemy, enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
+            case 10:
+                spawn_enemy(room, enemy, sounds, md, assets, gFrame);
+                break;
         }
         if (enemy.carried_enemy.value().isAlive == false)
         {
@@ -403,58 +444,39 @@ void move_enemy_carried_element(Enemy & enemy, Projectiles & projectiles, Explos
         });
     }
 }
-void spawn_enemy(Room & room, const Enemy & spawner, Sounds & sounds, const Assets & assets, int gFrame)
-{
-    if (gFrame % SPAWN_INTERVAL == 0)
-    {
-        int id = std::rand() % (17-11+1) + 11;
-        Enemy eo;
-        create_enemy_anim(eo.anim, id, 0, assets);
-        eo.anim.sprite.value().setPosition(spawner.anim.sprite.value().getPosition());
-        if (id == 15 || id == 16)
-        {
-            eo.velocity = {200.0f, 200.0f};
-        }
-        eo.anim.color_index = std::rand()%7+9;
-        eo.anim.sprite.value().setColor(zx_colors[eo.anim.color_index]);
-        eo.health = healths[id];
-        room.enemies.push_back(eo);
-        sounds.sounds.at(ENEMY_10_SPAWN).play();
-    }
-}
 
 void move_enemy(Room & room, Enemy & enemy, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
-    const Ship & ship, const Assets & assets, float dt, int gFrame)
+    const Ship & ship, const MazeData & md, const Assets & assets, float dt, int gFrame)
 {
     enemy.previous_position = enemy_get_position(enemy);
 
     switch (enemy.anim.id)
     {
         case 1:
-            shooting_horizontal(enemy.anim, projectiles, explosions, sounds, ship, assets, dt, gFrame);
+            shooting_horizontal(enemy, enemy.anim, projectiles, explosions, sounds, ship, assets, dt);
             break;
         case 2:
-            shooting_tracking(enemy.anim, projectiles, sounds, ship, assets, dt, gFrame);
+            shooting_tracking(enemy, enemy.anim, projectiles, sounds, ship, assets, dt);
             break;
         case 3:
             move_enemy_mirror(enemy, ship);
-            shooting_horizontal(enemy.anim, projectiles, explosions, sounds, ship, assets, dt, gFrame);
+            shooting_horizontal(enemy, enemy.anim, projectiles, explosions, sounds, ship, assets, dt);
             break;
         case 5:
         case 6:
-            shooting_vertical(enemy.anim, projectiles, sounds, ship, assets, dt, gFrame);
+            shooting_vertical(enemy, enemy.anim, projectiles, sounds, ship, assets, dt);
             break;
         case 7:
-            shooting_tracking(enemy.anim, projectiles, sounds, ship, assets, dt, gFrame);
+            shooting_tracking(enemy, enemy.anim, projectiles, sounds, ship, assets, dt);
             break;
         case 8:
-            shooting_diagonal(enemy.anim, projectiles, explosions, sounds, ship, assets, dt, gFrame);
+            shooting_diagonal(enemy.anim, projectiles, explosions, sounds, ship, assets, dt);
             break;
         case 9:
-            shooting_horizontal(enemy.anim, projectiles, explosions, sounds, ship, assets, dt, gFrame);
+            shooting_horizontal(enemy, enemy.anim, projectiles, explosions, sounds, ship, assets, dt);
             break;
         case 10:
-            spawn_enemy(room, enemy, sounds, assets, gFrame);
+            spawn_enemy(room, enemy, sounds, md, assets, gFrame);
             break;
         case 11:
             move_enemy_mirror(enemy, ship);
@@ -466,7 +488,7 @@ void move_enemy(Room & room, Enemy & enemy, Projectiles & projectiles, Explosion
         case 13: 
             move_enemy_mirror(enemy, ship);
             move_enemy_random_vertical_tracking(enemy, ship, dt, gFrame);
-            shooting_horizontal(enemy.anim, projectiles, explosions, sounds, ship, assets, dt, gFrame);
+            shooting_horizontal(enemy, enemy.anim, projectiles, explosions, sounds, ship, assets, dt);
             break;
         case 14: 
             move_enemy_mirror(enemy, ship);
@@ -486,7 +508,7 @@ void move_enemy(Room & room, Enemy & enemy, Projectiles & projectiles, Explosion
             break;
         case 20:
             move_enemy_random(enemy, dt, gFrame);
-            move_enemy_carried_element(enemy, projectiles, explosions, sounds, ship, assets, dt, gFrame);
+            move_enemy_carried_element(room, enemy, projectiles, explosions, sounds, ship, md, assets, dt, gFrame);
             break;
     }
 }

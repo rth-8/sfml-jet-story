@@ -1,4 +1,6 @@
+#include <iostream>
 #include <fstream>
+#include <sstream>
 #include <format>
 
 #include "maze_data.h"
@@ -89,6 +91,36 @@ void load_room(RoomData & room, const int & row, const int & col)
     load_enemies(room, row, col);
 }
 
+void load_enemy_specs(MazeData & maze)
+{
+    std::fstream input;
+    input.open("./data/enemies/general.txt", std::ios::in);
+    if (input.is_open())
+    {
+        std::string line;
+        int line_idx = 0;
+        while (std::getline(input, line))
+        {
+            if (line_idx == 0)
+            {
+                line_idx++;
+                continue;
+            }
+
+            std::stringstream ss(line);
+            EnemySpec spc;
+            int id;
+            char del;
+            ss >> id >> del >> spc.health >> del >> spc.shooting_delay >> del >> spc.shooting_speed;
+            maze.enemy_specs.push_back(spc);
+
+            line_idx++;
+        }
+
+        input.close();
+    }
+}
+
 void load_maze(MazeData & maze)
 {
     for (int r=0; r<ROWS; ++r)
@@ -100,4 +132,6 @@ void load_maze(MazeData & maze)
             maze.rooms.push_back(room);
         }
     }
+
+    load_enemy_specs(maze);
 }
