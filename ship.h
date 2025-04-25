@@ -46,7 +46,8 @@ struct Assets;
 struct Maze;
 struct Sounds;
 
-void create_ship(Ship & ship, const sf::Vector2f & pos, const Assets & assets);
+void create_ship(Ship & ship, const Assets & assets);
+void reset_ship(Ship & ship, const sf::Vector2f & pos);
 void move_ship(float dt, Ship & ship);
 void update_flames_positions(Ship & ship);
 void get_item(Ship & ship, int id);

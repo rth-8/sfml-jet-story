@@ -19,6 +19,7 @@ OBJECTS=\
 	enemies.o \
 	maze.o \
 	infobar.o \
+	scene_game.o \
 	main.o
 
 all: $(OUTPUT)

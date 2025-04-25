@@ -11,30 +11,27 @@
 #define SPECIAL_BALL_LIFESPAN 12
 #define SPECIAL_STAR_LIFESPAN 12
 
-void create_ship(Ship & ship, const sf::Vector2f & pos, const Assets & assets)
+void create_ship(Ship & ship, const Assets & assets)
 {
     create_animation(ship.ship_body, 0, assets.ship, assets.ship.getSize().x, assets.ship.getSize().y);
-    ship.ship_body.sprite.value().setPosition(pos);
-
     create_animation(ship.ship_flame_back, 0, assets.ship_flame_back, 43, 35, 2, 4);
     create_animation(ship.ship_flame_down_big, 0, assets.ship_flame_down_big, 32, 44, 2, 4);
     create_animation(ship.ship_flame_down_small, 0, assets.ship_flame_down_small, 19, 38, 2, 4);
+}
 
+void reset_ship(Ship & ship, const sf::Vector2f & pos)
+{
+    ship.ship_body.sprite.value().setPosition(pos);
     ship.previous_position = pos;
     ship.velocity = {0.0f, 0.0f};
-
     ship.shield = HEALTH_MAX;
     ship.fuel = FUEL_MAX;
     ship.damage_delay = 0;
-    
     ship.cannon_ammo = AMMO_MAX;
-
     ship.special_type = SpecialType::BALL;
     ship.next_special = INT_MAX;
     ship.special_ammo = 4;
-
     ship.score = 0;
-    
     ship.thrust_up = false;
     ship.thrust_horiz = false;
 }

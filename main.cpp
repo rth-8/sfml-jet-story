@@ -5,19 +5,32 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "common.h"
-#include "zx_colors.h"
 #include "assets.h"
 #include "sounds.h"
 #include "maze_data.h"
-#include "animation.h"
 #include "infobar.h"
-#include "physics.h"
 #include "explosions.h"
 #include "projectiles.h"
 #include "ship.h"
-#include "enemies.h"
 #include "maze.h"
+#include "scene_game.h"
+
+enum Scenes
+{
+    SCENE_TITLE,
+    SCENE_MAIN_MENU,
+    SCENE_GAME,
+};
+
+void new_game(Ship & ship, Maze & maze, const MazeData & mazeData, const Assets & assets)
+{
+    maze.rooms.clear();
+    maze.current_room_row = 0;
+    maze.current_room_col = 0;
+    maze.base_cnt = 0;
+    create_maze(maze, mazeData, assets);
+    reset_ship(ship, {200,310});
+}
 
 int main()
 {
@@ -40,25 +53,29 @@ int main()
     load_sounds(assets);
     load_font(assets);
     
-    MazeData maze_d;
-    load_maze(maze_d);
+    MazeData mazeData;
+    load_maze(mazeData);
     
-    Maze maze_o;
-    create_maze(maze_o, maze_d, assets);
+    Maze maze;
     
-    Ship ship_o;
-    create_ship(ship_o, {200,310}, assets);
+    Ship ship;
+    create_ship(ship, assets);
 
-    Projectiles projectiles_o;
+    Projectiles projectiles;
     
-    Explosions explosions_o;
-    explosions_o.flashing_counter = 0;
+    Explosions explosions;
+    explosions.flashing_counter = 0;
     
-    Sounds sounds_o;
-    create_sounds(sounds_o, assets);
+    Sounds sounds;
+    create_sounds(sounds, assets);
 
-    InfoBar infobar_o;
-    create_infobar(infobar_o, assets);
+    InfoBar infobar;
+    create_infobar(infobar, assets);
+
+    sf::Texture titleTex("./images/misc/loadscr.png");
+    sf::Sprite titleSpr(titleTex);
+
+    Scenes current_scene = SCENE_TITLE;
 
     while (window.isOpen())
     {
@@ -66,67 +83,6 @@ int main()
         float dtAsSeconds = dt.asSeconds();
         // std::cout << "dt = " << dtAsSeconds << "\n";
         
-        auto & room_o = get_current_room(maze_o);
-
-        // input
-
-        ship_o.previous_position = ship_o.ship_body.sprite.value().getPosition();
-        if (ship_o.cannon.has_value())
-        {
-            ship_o.cannon_previous_position = ship_o.cannon.value().sprite.value().getPosition();
-        }
-        if (ship_o.special.has_value()) 
-        {
-            ship_o.special_previous_position = ship_o.special.value().sprite.value().getPosition();
-        }
-
-        ship_o.thrust_up = false;
-        ship_o.thrust_horiz = false;
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
-        {
-            ship_o.velocity.y -= ACCEL_VERT * dtAsSeconds;
-            ship_o.fuel -= FUEL_SUB * dtAsSeconds;
-            ship_o.thrust_up = true;
-        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
-        {
-            // launch special
-            if (!ship_o.special.has_value() && ship_o.special_ammo > 0)
-            {
-                ship_o.special_ammo--;
-                create_special(ship_o, assets);
-                sounds_o.sounds.at(SPECIAL_LAUNCH).play();
-            }
-        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
-        {
-            ship_o.velocity.x -= ACCEL_HORIZ * dtAsSeconds;
-            ship_o.fuel -= FUEL_SUB * dtAsSeconds;
-            ship_o.ship_body.sprite.value().setScale({-1, 1});
-            ship_o.thrust_horiz = true;
-        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
-        {
-            ship_o.velocity.x += ACCEL_HORIZ * dtAsSeconds;
-            ship_o.fuel -= FUEL_SUB * dtAsSeconds;
-            ship_o.ship_body.sprite.value().setScale({1, 1});
-            ship_o.thrust_horiz = true;
-        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
-        {
-            if (!ship_o.cannon.has_value() && ship_o.cannon_ammo > 0)
-            {
-                ship_o.cannon_ammo--;
-                create_cannon(ship_o, assets);
-                sounds_o.sounds.at(CANNON_SHOT).play();
-            }
-        }
-
         // SFML events
         while (const std::optional event = window.pollEvent())
         {
@@ -136,300 +92,32 @@ int main()
             }
         }
 
-        // update
-
-        move_ship(dtAsSeconds, ship_o);
-        if (ship_o.cannon.has_value())
+        if (current_scene == SCENE_TITLE)
         {
-            move_cannon(dtAsSeconds, ship_o);
-        }
-        if (ship_o.special.has_value())
-        {
-            move_special(dtAsSeconds, ship_o);
-        }
-
-        for (auto & enemy_o : room_o.enemies)
-        {
-            move_enemy(room_o, enemy_o, projectiles_o, explosions_o, sounds_o, ship_o, maze_d, assets, dtAsSeconds, game_frame);
-        }
-
-        for (auto & prj : projectiles_o.projectiles)
-        {
-            move_projectile(prj, sounds_o, dtAsSeconds);
-        }
-
-        for (auto & fg : explosions_o.fragments)
-        {
-            move_fragment(fg, dtAsSeconds);
-        }
-
-        // collisions
-
-        for (auto & wall_o : room_o.walls)
-        {
-            collision_ship_wall(ship_o, wall_o);
-            collision_cannon_wall(ship_o, wall_o);
-            collision_special_wall(ship_o, wall_o, sounds_o);
-            for (auto & enemy_o : room_o.enemies)
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter))
             {
-                collision_enemy_wall(enemy_o, wall_o);
+                new_game(ship, maze, mazeData, assets);
+                current_scene = SCENE_GAME;
             }
 
-            for (auto & prj : projectiles_o.projectiles)
-            {
-                collision_projectile_wall(prj, wall_o, explosions_o, sounds_o, assets);
-            }
-
-            for (auto & fg : explosions_o.fragments)
-            {
-                if (checkCollision(fg.anim, wall_o))
-                {
-                    fg.anim.isAlive = false;
-                }
-            }
-        }
-
-        for (auto & item_o : room_o.items)
-        {
-            collision_ship_item(ship_o, item_o, sounds_o);
-        }
-
-        bool anyCollision = false;
-        for (auto & enemy_o : room_o.enemies)
-        {
-            if (collision_enemy_ship(enemy_o, maze_o, ship_o, explosions_o, sounds_o, assets))
-            {
-                anyCollision = true;
-            }
-            if (ship_o.cannon.has_value())
-            {
-                collision_enemy_cannon(enemy_o, maze_o, ship_o, explosions_o, sounds_o, assets);
-            }
-            if (ship_o.special.has_value())
-            {
-                collision_enemy_special(enemy_o, maze_o, ship_o, explosions_o, sounds_o, assets);
-            }
-            enemy_check_bounds(enemy_o);
-        }
-        if (!anyCollision)
-        {
-            sounds_o.sounds.at(DAMAGE).stop();
-        }
-
-        for (auto & prj : projectiles_o.projectiles)
-        {
-            collision_projectile_ship(prj, ship_o, explosions_o, sounds_o, assets);
-            projectile_check_bounds(prj, sounds_o);
-        }
-
-        for (auto & fg : explosions_o.fragments)
-        {
-            fragment_check_bounds(fg);
-        }
-
-        cannon_check_bounds(ship_o);
-        special_check_bounds(ship_o, sounds_o);
-        if (ship_check_bounds(maze_o, ship_o))
-        {
-            projectiles_o.projectiles.clear();
-            
-            explosions_o.explosions.clear();
-            explosions_o.fragments.clear();
-
-            for (int i = DAMAGE; i != LAST; i++)
-            {
-                SoundTypes t = static_cast<SoundTypes>(i);
-                sounds_o.sounds.at(t).stop();
-            }
-            
-            game_frame = 0;
-            continue;
-        }
-
-        // animations
-
-        update_flames_positions(ship_o);
-
-        if (ship_o.thrust_horiz)
-        {
-            animation_update(ship_o.ship_flame_back);
-        }
-        if (ship_o.thrust_up) 
-        {
-            animation_update(ship_o.ship_flame_down_big);
-            animation_update(ship_o.ship_flame_down_small);
-        }
-
-        for (auto & enemy_o : room_o.enemies)
-        {
-            if (enemy_o.anim.sprite.has_value())
-            {
-                animation_update(enemy_o.anim);
-                if (enemy_o.carried_enemy.has_value())
-                {
-                    animation_update(enemy_o.carried_enemy.value());
-                }
-            }
-        }
-
-        for (auto & prj : projectiles_o.projectiles)
-        {
-            animation_update(prj.anim);
-        }
-
-        for (auto & expl : explosions_o.explosions)
-        {
-            animation_update(expl);
-            if (has_animation_ended(expl))
-            {
-                expl.isAlive = false;
-            }
-        }
-
-        for (auto & fg : explosions_o.fragments)
-        {
-            if (fg.anim.counter % fg.anim.speed == 0)
-            {
-                set_frame(fg.anim, std::rand() % fg.anim.frame_count);
-            }
-            fg.anim.counter++;
-        }
-
-        update_infobar(infobar_o, maze_o, ship_o, assets, game_frame);
-
-        if (explosions_o.flashing_counter > 0)
-        {
-            explosions_o.flashing_counter -= FLASH_SPD * dtAsSeconds;
-            if (explosions_o.flashing_counter <= 0) 
-                explosions_o.flashing_counter = 0;
-        }
-
-        // render
-
-        if (explosions_o.flashing_counter == 0)
-        {
             window.clear();
+            window.draw(titleSpr);
+            window.display();
         }
         else
-        if (explosions_o.flashing_counter < FLASH_MID)
+        if (current_scene == SCENE_GAME)
         {
-            window.clear(sf::Color::Yellow);
-        }
-        else
-        {
-            window.clear(sf::Color::White);
-        }
-
-        draw_infobar(window, infobar_o);
-
-        window.draw(ship_o.ship_body.sprite.value());
-        if (ship_o.thrust_horiz)
-        {
-            window.draw(ship_o.ship_flame_back.sprite.value());
-        }
-        if (ship_o.thrust_up)
-        {
-            window.draw(ship_o.ship_flame_down_big.sprite.value());
-            window.draw(ship_o.ship_flame_down_small.sprite.value());
-        }
-        if (ship_o.cannon.has_value())
-        {
-            window.draw(ship_o.cannon.value().sprite.value());
-        }
-        if (ship_o.special.has_value())
-        {
-            if (ship_o.special_lifespan > 8)
+            scene_game_input(ship, sounds, assets, dtAsSeconds);
+            scene_game_update(ship, maze, projectiles, explosions, sounds, mazeData, assets, dtAsSeconds, game_frame);
+            if (scene_game_collisions(ship, maze, projectiles, explosions, sounds, assets))
             {
-                ship_o.special.value().sprite.value().setColor(zx_colors[std::rand()%7+9]);
+                game_frame = 0;
+                continue;
             }
-            window.draw(ship_o.special.value().sprite.value());
-        }
-
-        for (auto & item_o : room_o.items)
-        {
-            window.draw(item_o.sprite.value());
-            update_item(item_o, game_frame);
-        }
-
-        for (auto & enemy_o : room_o.enemies)
-        {
-            if (enemy_o.anim.sprite.has_value())
-            {
-                window.draw(enemy_o.anim.sprite.value());
-                if (enemy_o.carried_enemy.has_value())
-                {
-                    window.draw(enemy_o.carried_enemy.value().sprite.value());
-                }
-                if (enemy_o.carried_item.has_value())
-                {
-                    window.draw(enemy_o.carried_item.value().sprite.value());
-                    update_item(enemy_o.carried_item.value(), game_frame);
-                }
-            }
-        }
-
-        for (auto & prj : projectiles_o.projectiles)
-        {
-            window.draw(prj.anim.sprite.value());
-        }
-
-        for (auto & expl : explosions_o.explosions)
-        {
-            window.draw(expl.sprite.value());
-        }
-
-        for (auto & fg : explosions_o.fragments)
-        {
-            window.draw(fg.anim.sprite.value());
-        }
-
-        for (auto & wall_o : room_o.walls)
-        {
-            window.draw(wall_o.sprite.value());
-        }
-
-        window.display();
-
-        // cleanup
-
-        for (std::vector<Animation>::iterator it = room_o.items.begin(); it != room_o.items.end();)
-        {
-            if ((*it).isAlive == false) 
-                it = room_o.items.erase(it);
-            else
-                ++it;
-        }
-
-        for (std::vector<Enemy>::iterator it = room_o.enemies.begin(); it != room_o.enemies.end();)
-        {
-            if ((*it).anim.isAlive == false) 
-                it = room_o.enemies.erase(it);
-            else
-                ++it;
-        }
-
-        for (std::vector<Projectile>::iterator it = projectiles_o.projectiles.begin(); it != projectiles_o.projectiles.end();)
-        {
-            if ((*it).anim.isAlive == false) 
-                it = projectiles_o.projectiles.erase(it);
-            else
-                ++it;
-        }
-
-        for (std::vector<Animation>::iterator it = explosions_o.explosions.begin(); it != explosions_o.explosions.end();)
-        {
-            if ((*it).isAlive == false) 
-                it = explosions_o.explosions.erase(it);
-            else
-                ++it;
-        }
-
-        for (std::vector<Fragment>::iterator it = explosions_o.fragments.begin(); it != explosions_o.fragments.end();)
-        {
-            if ((*it).anim.isAlive == false) 
-                it = explosions_o.fragments.erase(it);
-            else
-                ++it;
+            scene_game_animations(ship, maze, projectiles, explosions, dtAsSeconds);
+            update_infobar(infobar, maze, ship, assets, game_frame);
+            scene_game_draw(window, ship, maze, projectiles, explosions, infobar, game_frame);
+            scene_game_cleanup(maze, projectiles, explosions);
         }
 
         game_frame++;
