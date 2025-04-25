@@ -1,7 +1,10 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
+#include <SFML/Graphics/RectangleShape.hpp>
 #include "animation.h"
+
+bool point_in_rect(const sf::RectangleShape & rect, int x, int y);
 
 bool checkCollision(const Animation & a1, const Animation & a2);
 

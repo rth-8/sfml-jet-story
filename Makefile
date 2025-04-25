@@ -19,6 +19,7 @@ OBJECTS=\
 	enemies.o \
 	maze.o \
 	infobar.o \
+	menu.o \
 	scene_game.o \
 	main.o
 

@@ -13,6 +13,7 @@
 #include "projectiles.h"
 #include "ship.h"
 #include "maze.h"
+#include "menu.h"
 #include "scene_game.h"
 
 enum Scenes
@@ -42,6 +43,8 @@ int main()
 
     sf::Clock clock;
     int game_frame = 0;
+
+    Scenes current_scene = SCENE_TITLE;
 
     Assets assets;
     load_wall_textures(assets);
@@ -75,7 +78,24 @@ int main()
     sf::Texture titleTex("./images/misc/loadscr.png");
     sf::Sprite titleSpr(titleTex);
 
-    Scenes current_scene = SCENE_TITLE;
+    Menu mainMenu;
+    add_button(mainMenu, "New Game", {10,10}, {500,50}, assets.font);
+    add_button(mainMenu, "Continue", {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font);
+    add_button(mainMenu, "Load",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font);
+    add_button(mainMenu, "Save",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font);
+    add_button(mainMenu, "Quit",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font);
+    
+    mainMenu.current = 0;
+    mainMenu.buttons[mainMenu.current].rect.setOutlineColor(sf::Color::Yellow);
+
+    mainMenu.buttons[0].callback = [&ship, &maze, &mazeData, &assets, &current_scene] () {
+        new_game(ship, maze, mazeData, assets);
+        current_scene = SCENE_GAME;
+    };
+
+    mainMenu.buttons[4].callback = [&window] () {
+        window.close();
+    };
 
     while (window.isOpen())
     {
@@ -90,18 +110,28 @@ int main()
             {
                 window.close();
             }
+
+            if (current_scene == SCENE_MAIN_MENU)
+            {
+                menu_input(mainMenu, event);
+            }
         }
 
         if (current_scene == SCENE_TITLE)
         {
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter))
             {
-                new_game(ship, maze, mazeData, assets);
-                current_scene = SCENE_GAME;
+                current_scene = SCENE_MAIN_MENU;
             }
-
             window.clear();
             window.draw(titleSpr);
+            window.display();
+        }
+        else
+        if (current_scene == SCENE_MAIN_MENU)
+        {
+            window.clear();
+            draw_menu(window, mainMenu);
             window.display();
         }
         else

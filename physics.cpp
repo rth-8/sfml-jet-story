@@ -1,5 +1,18 @@
 #include "physics.h"
 
+bool point_in_rect(const sf::RectangleShape & rect, int x, int y)
+{
+    if (x >= rect.getPosition().x && x <= rect.getPosition().x + rect.getSize().x &&
+        y >= rect.getPosition().y && y <= rect.getPosition().y + rect.getSize().y)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 bool checkCollision(const Animation & a1, const Animation & a2)
 {
     const auto & pos1 = a1.sprite.value().getPosition() - a1.half_size;
