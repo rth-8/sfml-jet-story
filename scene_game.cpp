@@ -394,4 +394,8 @@ void scene_game_cleanup(Maze & maze, Projectiles & projectiles, Explosions & exp
         else
             ++it;
     }
+
+    // enemies spawned by #10 go to room's enemies vecotr
+    std::copy(room.to_be_added.begin(), room.to_be_added.end(), std::back_inserter(room.enemies));
+    room.to_be_added.clear();
 }

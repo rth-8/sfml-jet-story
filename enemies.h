@@ -51,10 +51,10 @@ void move_enemy_random_vertical_tracking(Enemy & enemy, const Ship & ship, float
 void move_enemy_random(Enemy & enemy, float dt, int gFrame);
 void move_enemy_constant(Enemy & enemy, float dt);
 
-void spawn_enemy(Room & room, const Enemy & spawner, Sounds & sounds, const MazeData & md, const Assets & assets, int gFrame);
+void spawn_enemy(Room & room, Enemy & spawner, Animation & spawnerAnim, Sounds & sounds, const MazeData & md, const Assets & assets, float dt);
 
 void move_enemy_carried_element(Room & room, Enemy & enemy, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
-    const Ship & ship, const MazeData & md, const Assets & assets, float dt, int gFrame);
+    const Ship & ship, const MazeData & md, const Assets & assets, float dt);
 
 void move_enemy(Room & room, Enemy & enemy, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
     const Ship & ship, const MazeData & md, const Assets & assets, float dt, int gFrame);

@@ -15,7 +15,6 @@
 #include "sounds.h"
 
 #define ENEMY_CARRIED_GAP 2
-#define SPAWN_INTERVAL 500
 
 const std::set<int> non_animated{0, 1, 2, 3, 4, 5, 6, 8, 11, 18};
 
@@ -85,7 +84,7 @@ void create_enemy_anim(Animation & anim, const int & id, const int & subid, cons
         {
             case 7:  create_animation(anim, id, assets.enemies[id], 50, 45, 4, 10); break;
             case 9:  create_animation(anim, id, assets.enemies[id], 49, 50, 8, 10); break;
-            case 10: create_animation(anim, id, assets.enemies[id], 50, 50, 2, SPAWN_INTERVAL); break;
+            case 10: create_animation(anim, id, assets.enemies[id], 50, 50, 2, 0); break;   // spawner
             case 12: create_animation(anim, id, assets.enemies[id], 50, 50, 4, 6); break;
             case 13: create_animation(anim, id, assets.enemies[id], 47, 50, 2, 6); break;
             case 14: create_animation(anim, id, assets.enemies[id], 50, 50, 2, 6); break;
@@ -214,7 +213,7 @@ void shooting_horizontal(Enemy & enemy, Animation & enemyAnim, Projectiles & pro
                 prj.velocity = {200.0f * enemyAnim.sprite.value().getScale().x, 0.0f};
             }
             else
-            if (enemyAnim.id == 9)
+            if (enemyAnim.id == 9 && std::rand()%10 == 0)
             {
                 auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
                 prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
@@ -232,7 +231,7 @@ void shooting_horizontal(Enemy & enemy, Animation & enemyAnim, Projectiles & pro
                 create_explosion(explosions, enemyAnim.sprite.value().getPosition(), assets);
             }
 
-            enemy.shooting_counter = enemy.shooting_delay;
+            enemy.shooting_counter = enemy.shooting_delay + (std::rand() % 20 - 10);
         }
         else
         {
@@ -267,7 +266,7 @@ void shooting_vertical(Enemy & enemy, Animation & enemyAnim, Projectiles & proje
                 prj.velocity = {0.0f, 100.0f};
             }
 
-            enemy.shooting_counter = enemy.shooting_delay;
+            enemy.shooting_counter = enemy.shooting_delay + (std::rand() % 20 - 10);
         }
         else
         {
@@ -283,7 +282,7 @@ void shooting_vertical(Enemy & enemy, Animation & enemyAnim, Projectiles & proje
 void shooting_diagonal(Animation & enemyAnim, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
     const Ship & ship, const Assets & assets, float dt)
 {
-    if (enemyAnim.id == 8)
+    if (enemyAnim.id == 8 && std::rand()%10 == 0)
     {
         float dx = abs(ship.ship_body.sprite.value().getPosition().x - enemyAnim.sprite.value().getPosition().x);
         float dy = abs(ship.ship_body.sprite.value().getPosition().y - enemyAnim.sprite.value().getPosition().y);
@@ -326,7 +325,7 @@ void shooting_tracking(Enemy & enemy, Animation & enemyAnim, Projectiles & proje
         prj.velocity = ship.ship_body.sprite.value().getPosition() - enemyAnim.sprite.value().getPosition();
         prj.velocity = prj.velocity.normalized() * 200.0f;
 
-        enemy.shooting_counter = enemy.shooting_delay;
+        enemy.shooting_counter = enemy.shooting_delay + (std::rand() % 20 - 10);
     }
     else
     {
@@ -372,14 +371,14 @@ void move_enemy_constant(Enemy & enemy, float dt)
     enemy.anim.sprite.value().move(enemy.velocity * dt);
 }
 
-void spawn_enemy(Room & room, const Enemy & spawner, Sounds & sounds, const MazeData & md, const Assets & assets, int gFrame)
+void spawn_enemy(Room & room, Enemy & spawner, Animation & spawnerAnim, Sounds & sounds, const MazeData & md, const Assets & assets, float dt)
 {
-    if (gFrame % SPAWN_INTERVAL == 0)
+    if (spawner.shooting_counter <= 0)
     {
-        int id = std::rand() % (17-11+1) + 11;
         Enemy eo;
+        int id = std::rand() % (17-11+1) + 11;
         create_enemy_anim(eo.anim, id, 0, assets);
-        eo.anim.sprite.value().setPosition(spawner.anim.sprite.value().getPosition());
+        eo.anim.sprite.value().setPosition(spawnerAnim.sprite.value().getPosition());
         if (id == 15 || id == 16)
         {
             eo.velocity = {200.0f, 200.0f};
@@ -389,28 +388,34 @@ void spawn_enemy(Room & room, const Enemy & spawner, Sounds & sounds, const Maze
         eo.health = md.enemy_specs[id].health;
         eo.shooting_delay = md.enemy_specs[id].shooting_delay;
         eo.shooting_speed = md.enemy_specs[id].shooting_speed;
-        room.enemies.push_back(eo);
+
+        room.to_be_added.push_back(eo); // new enemy should not be added to room's enemies vector immediately
+
         sounds.sounds.at(ENEMY_10_SPAWN).play();
+        set_frame(spawnerAnim, ((spawnerAnim.frame + 1) % spawnerAnim.frame_count));
+        spawner.shooting_counter = spawner.shooting_delay + (std::rand() % 20 - 10);
+    }
+    else
+    {
+        spawner.shooting_counter -= spawner.shooting_speed * dt;
     }
 }
 
 void move_enemy_carried_element(Room & room, Enemy & enemy, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
-    const Ship & ship, const MazeData & md, const Assets & assets, float dt, int gFrame)
+    const Ship & ship, const MazeData & md, const Assets & assets, float dt)
 {
     if (enemy.carried_enemy.has_value())
     {
         switch (enemy.carried_enemy.value().id)
         {
-            case 1: shooting_horizontal(enemy, enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
-            case 2: shooting_tracking(enemy, enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt); break;
-            case 3: shooting_horizontal(enemy, enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
-            case 5: shooting_vertical(enemy, enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt); break;
-            case 7: shooting_tracking(enemy, enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt); break;
-            case 8: shooting_diagonal(enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
-            case 9: shooting_horizontal(enemy, enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
-            case 10:
-                spawn_enemy(room, enemy, sounds, md, assets, gFrame);
-                break;
+            case 1:  shooting_horizontal(enemy, enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
+            case 2:  shooting_tracking(enemy, enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt); break;
+            case 3:  shooting_horizontal(enemy, enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
+            case 5:  shooting_vertical(enemy, enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt); break;
+            case 7:  shooting_tracking(enemy, enemy.carried_enemy.value(), projectiles, sounds, ship, assets, dt); break;
+            case 8:  shooting_diagonal(enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
+            case 9:  shooting_horizontal(enemy, enemy.carried_enemy.value(), projectiles, explosions, sounds, ship, assets, dt); break;
+            case 10: spawn_enemy(room, enemy, enemy.carried_enemy.value(), sounds, md, assets, dt); break;
         }
         if (enemy.carried_enemy.value().isAlive == false)
         {
@@ -476,7 +481,7 @@ void move_enemy(Room & room, Enemy & enemy, Projectiles & projectiles, Explosion
             shooting_horizontal(enemy, enemy.anim, projectiles, explosions, sounds, ship, assets, dt);
             break;
         case 10:
-            spawn_enemy(room, enemy, sounds, md, assets, gFrame);
+            spawn_enemy(room, enemy, enemy.anim, sounds, md, assets, dt);
             break;
         case 11:
             move_enemy_mirror(enemy, ship);
@@ -508,7 +513,7 @@ void move_enemy(Room & room, Enemy & enemy, Projectiles & projectiles, Explosion
             break;
         case 20:
             move_enemy_random(enemy, dt, gFrame);
-            move_enemy_carried_element(room, enemy, projectiles, explosions, sounds, ship, md, assets, dt, gFrame);
+            move_enemy_carried_element(room, enemy, projectiles, explosions, sounds, ship, md, assets, dt);
             break;
     }
 }

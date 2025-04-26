@@ -11,6 +11,7 @@ struct Room
     std::vector<Animation> walls;
     std::vector<Animation> items;
     std::vector<Enemy> enemies;
+    std::vector<Enemy> to_be_added;
 };
 
 struct Maze

@@ -232,6 +232,29 @@ void move_special(float dt, Ship & ship)
     }
 }
 
+void ship_next_room(Ship & ship)
+{
+    if (ship.cannon.has_value())
+    {
+        ship.cannon.reset();
+    }
+    if (ship.special.has_value())
+    {
+        switch (ship.special_type)
+        {
+            case BALL:
+            case STAR:
+                // ball moves with ship to next room
+                ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
+                break;
+            default:
+                // missiles are destroyed
+                reset_special(ship);
+                break;
+        }
+    }
+}
+
 bool ship_check_bounds(Maze & maze, Ship & ship)
 {
     if (ship.ship_body.sprite.value().getPosition().x < EDGE_LEFT + ship.ship_body.half_size.x)
@@ -239,21 +262,7 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
         // std::cout << "NEXT ROOM: left\n";
         maze.current_room_col--;
         ship.ship_body.sprite.value().setPosition({EDGE_RIGHT - ship.ship_body.half_size.x, ship.ship_body.sprite.value().getPosition().y});
-        if (ship.special.has_value())
-        {
-            switch (ship.special_type)
-            {
-                case BALL:
-                case STAR:
-                    // ball moves with ship to next room
-                    ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
-                    break;
-                default:
-                    // missiles are destroyed
-                    reset_special(ship);
-                    break;
-            }
-        }
+        ship_next_room(ship);
         return true;
     }
     else if (ship.ship_body.sprite.value().getPosition().x > EDGE_RIGHT - ship.ship_body.half_size.x)
@@ -261,21 +270,7 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
         // std::cout << "NEXT ROOM: right\n";
         maze.current_room_col++;
         ship.ship_body.sprite.value().setPosition({EDGE_LEFT + ship.ship_body.half_size.x, ship.ship_body.sprite.value().getPosition().y});
-        if (ship.special.has_value())
-        {
-            switch (ship.special_type)
-            {
-                case BALL:
-                case STAR:
-                    // ball moves with ship to next room
-                    ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
-                    break;
-                default:
-                    // missiles are destroyed
-                    reset_special(ship);
-                    break;
-            }
-        }
+        ship_next_room(ship);
         return true;
     }
     else if (ship.ship_body.sprite.value().getPosition().y < EDGE_TOP + ship.ship_body.half_size.y)
@@ -283,21 +278,7 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
         // std::cout << "NEXT ROOM: up\n";
         maze.current_room_row--;
         ship.ship_body.sprite.value().setPosition({ship.ship_body.sprite.value().getPosition().x, EDGE_BOTTOM - ship.ship_body.half_size.y});
-        if (ship.special.has_value())
-        {
-            switch (ship.special_type)
-            {
-                case BALL:
-                case STAR:
-                    // ball moves with ship to next room
-                    ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
-                    break;
-                default:
-                    // missiles are destroyed
-                    reset_special(ship);
-                    break;
-            }
-        }
+        ship_next_room(ship);
         return true;
     }
     else if (ship.ship_body.sprite.value().getPosition().y > EDGE_BOTTOM - ship.ship_body.half_size.y)
@@ -305,21 +286,7 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
         // std::cout << "NEXT ROOM: down\n";
         maze.current_room_row++;
         ship.ship_body.sprite.value().setPosition({ship.ship_body.sprite.value().getPosition().x, EDGE_TOP + ship.ship_body.half_size.y});
-        if (ship.special.has_value())
-        {
-            switch (ship.special_type)
-            {
-                case BALL:
-                case STAR:
-                    // ball and star move with ship to next room
-                    ship.special.value().sprite.value().setPosition(ship.ship_body.sprite.value().getPosition());
-                    break;
-                default:
-                    // missiles are destroyed
-                    reset_special(ship);
-                    break;
-            }
-        }
+        ship_next_room(ship);
         return true;
     }
 
