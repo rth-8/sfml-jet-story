@@ -22,9 +22,11 @@ struct Menu
     size_t current;
 };
 
-void create_button(Button & button, std::string && str, const sf::Vector2f & pos, const sf::Vector2f & size, const sf::Font & font);
+void create_button(Button & button, std::string && str, const sf::Vector2f & pos, const sf::Vector2f & size, 
+    const sf::Font & font, const unsigned int & charSize);
 void draw_button(sf::RenderWindow & window, const Button & button);
-void add_button(Menu & menu, std::string && str, const sf::Vector2f & pos, const sf::Vector2f & size, const sf::Font & font);
+void add_button(Menu & menu, std::string && str, const sf::Vector2f & pos, const sf::Vector2f & size, 
+    const sf::Font & font, const unsigned int & charSize);
 void draw_menu(sf::RenderWindow & window, const Menu & menu);
 void menu_input(Menu & menu, const std::optional<sf::Event> event);
 

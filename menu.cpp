@@ -1,7 +1,8 @@
 #include "menu.h"
 #include "physics.h"
 
-void create_button(Button & button, std::string && str, const sf::Vector2f & pos, const sf::Vector2f & size, const sf::Font & font)
+void create_button(Button & button, std::string && str, const sf::Vector2f & pos, const sf::Vector2f & size, 
+    const sf::Font & font, const unsigned int & charSize)
 {
     button.rect.setSize(size);
     button.rect.setPosition(pos);
@@ -9,11 +10,12 @@ void create_button(Button & button, std::string && str, const sf::Vector2f & pos
     auto button_center = pos + size * 0.5f;
     
     button.rect.setFillColor(sf::Color(0, 0, 0, 0));
-    button.rect.setOutlineThickness(-2);
+    button.rect.setOutlineThickness(-4);
     button.rect.setOutlineColor(sf::Color::White);
-    
+
     button.text = std::make_optional<sf::Text>(font);
     button.text.value().setString(str);
+    button.text.value().setCharacterSize(charSize);
     
     auto text_half_size = button.text.value().getGlobalBounds().size * 0.5f;
     
@@ -32,10 +34,11 @@ void draw_button(sf::RenderWindow & window, const Button & button)
     }
 }
 
-void add_button(Menu & menu, std::string && str, const sf::Vector2f & pos, const sf::Vector2f & size, const sf::Font & font)
+void add_button(Menu & menu, std::string && str, const sf::Vector2f & pos, const sf::Vector2f & size, 
+    const sf::Font & font, const unsigned int & charSize)
 {
     Button btn;
-    create_button(btn, std::move(str), pos, size, font);
+    create_button(btn, std::move(str), pos, size, font, charSize);
     menu.buttons.push_back(btn);
 }
 

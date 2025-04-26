@@ -16,6 +16,8 @@
 #include "menu.h"
 #include "scene_game.h"
 
+#define MAIN_MENU_CHAR_SIZE 32
+
 enum Scenes
 {
     SCENE_TITLE,
@@ -79,11 +81,11 @@ int main()
     sf::Sprite titleSpr(titleTex);
 
     Menu mainMenu;
-    add_button(mainMenu, "New Game", {10,10}, {500,50}, assets.font);
-    add_button(mainMenu, "Continue", {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font);
-    add_button(mainMenu, "Load",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font);
-    add_button(mainMenu, "Save",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font);
-    add_button(mainMenu, "Quit",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font);
+    add_button(mainMenu, "New Game", {10,10}, {500,50}, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(mainMenu, "Continue", {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(mainMenu, "Load",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(mainMenu, "Save",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(mainMenu, "Quit",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font_menu, MAIN_MENU_CHAR_SIZE);
     
     mainMenu.current = 0;
     mainMenu.buttons[mainMenu.current].rect.setOutlineColor(sf::Color::Yellow);

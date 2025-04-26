@@ -10,7 +10,7 @@
 #define BAR_RECT_INNER_SIZE 22
 #define BAR_RECT_OUTER_SIZE 25
 #define VALUE_BAR_WIDTH 97
-#define FONT_SIZE 24
+#define BAR_FONT_SIZE 24
 
 void create_rect_line(InfoBar & ib, int x, int y, int amount)
 {
@@ -61,20 +61,20 @@ void create_infobar(InfoBar & ib, const Assets & assets)
 
     ib.special_type = NONE;
 
-    ib.special_ammount = std::make_optional<sf::Text>(assets.font);
+    ib.special_ammount = std::make_optional<sf::Text>(assets.font_infobar);
     ib.special_ammount.value().setPosition({275.0f, 50.0f - 2.0f});
     ib.special_ammount.value().setFillColor(sf::Color::White);
-    ib.special_ammount.value().setCharacterSize(FONT_SIZE);
+    ib.special_ammount.value().setCharacterSize(BAR_FONT_SIZE);
 
-    ib.bases_ammount = std::make_optional<sf::Text>(assets.font);
+    ib.bases_ammount = std::make_optional<sf::Text>(assets.font_infobar);
     ib.bases_ammount.value().setPosition({725.0f, 50.0f - 2.0f});
     ib.bases_ammount.value().setFillColor(sf::Color::White);
-    ib.bases_ammount.value().setCharacterSize(FONT_SIZE);
+    ib.bases_ammount.value().setCharacterSize(BAR_FONT_SIZE);
 
-    ib.score = std::make_optional<sf::Text>(assets.font);
+    ib.score = std::make_optional<sf::Text>(assets.font_infobar);
     ib.score.value().setPosition({550.0f, 25.0f - 2.0f});
     ib.score.value().setFillColor(sf::Color::White);
-    ib.score.value().setCharacterSize(FONT_SIZE);
+    ib.score.value().setCharacterSize(BAR_FONT_SIZE);
 }
 
 void update_infobar(InfoBar & ib, const Maze & maze, const Ship & ship, const Assets & assets, int gFrame)

@@ -89,5 +89,6 @@ void load_sounds(Assets & assets)
 
 void load_font(Assets & assets)
 {
-    if (!assets.font.openFromFile("./fonts/normal.ttf")) std::cerr << "Failed to load normal.ttf!";
+    if (!assets.font_menu.openFromFile("./fonts/font_menu.ttf")) std::cerr << "Failed to load font_menu.ttf!";
+    if (!assets.font_infobar.openFromFile("./fonts/font_infobar.ttf")) std::cerr << "Failed to load font_infobar.ttf!";
 }
