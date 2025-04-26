@@ -202,15 +202,39 @@ void shooting_horizontal(Enemy & enemy, Animation & enemyAnim, Projectiles & pro
             if (enemyAnim.id == 1)
             {
                 auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
-                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
-                prj.velocity = {300.0f * enemyAnim.sprite.value().getScale().x, 0.0f};
+                if (enemyAnim.sprite.value().getScale().x < 0)
+                {
+                    prj.anim.sprite.value().setPosition({
+                        enemyAnim.sprite.value().getPosition().x - enemyAnim.half_size.x,
+                        enemyAnim.sprite.value().getPosition().y});
+                    prj.velocity = {-300.0f, 0.0f};
+                }
+                else
+                {
+                    prj.anim.sprite.value().setPosition({
+                        enemyAnim.sprite.value().getPosition().x + enemyAnim.half_size.x,
+                        enemyAnim.sprite.value().getPosition().y});
+                    prj.velocity = {300.0f, 0.0f};
+                }
             }
             else
             if (enemyAnim.id == 3 || enemyAnim.id == 13)
             {
                 auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
-                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
-                prj.velocity = {200.0f * enemyAnim.sprite.value().getScale().x, 0.0f};
+                if (enemyAnim.sprite.value().getScale().x < 0)
+                {
+                    prj.anim.sprite.value().setPosition({
+                        enemyAnim.sprite.value().getPosition().x - enemyAnim.half_size.x,
+                        enemyAnim.sprite.value().getPosition().y});
+                    prj.velocity = {-300.0f, 0.0f};
+                }
+                else
+                {
+                    prj.anim.sprite.value().setPosition({
+                        enemyAnim.sprite.value().getPosition().x + enemyAnim.half_size.x,
+                        enemyAnim.sprite.value().getPosition().y});
+                    prj.velocity = {300.0f, 0.0f};
+                }
             }
             else
             if (enemyAnim.id == 9 && std::rand()%10 == 0)
@@ -255,15 +279,19 @@ void shooting_vertical(Enemy & enemy, Animation & enemyAnim, Projectiles & proje
             if (enemyAnim.id == 5)
             {
                 auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
-                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
+                prj.anim.sprite.value().setPosition({
+                    enemyAnim.sprite.value().getPosition().x,
+                    enemyAnim.sprite.value().getPosition().y - enemyAnim.size.y});
                 prj.velocity = {0.0f, -220.0f};
             }
             else
             if (enemyAnim.id == 6)
             {
                 auto & prj = create_projectile(projectiles, sounds, assets, enemyAnim.id);
-                prj.anim.sprite.value().setPosition(enemyAnim.sprite.value().getPosition());
-                prj.velocity = {0.0f, 100.0f};
+                prj.anim.sprite.value().setPosition({
+                    enemyAnim.sprite.value().getPosition().x,
+                    enemyAnim.sprite.value().getPosition().y + enemyAnim.size.y});
+                prj.velocity = {0.0f, 150.0f};
             }
 
             enemy.shooting_counter = enemy.shooting_delay + (std::rand() % 20 - 10);
