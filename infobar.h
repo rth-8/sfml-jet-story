@@ -10,11 +10,6 @@
 
 #include "ship.h"
 
-#define BAR_RECT_INNER_SIZE 22
-#define BAR_RECT_OUTER_SIZE 25
-#define VALUE_BAR_WIDTH 97
-#define FONT_SIZE 16
-
 struct InfoBarRect
 {
     sf::RectangleShape rect;
