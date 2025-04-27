@@ -61,6 +61,7 @@ void load_misc_textures(Assets & assets)
     if (!assets.fragment.loadFromFile("./images/misc/fragment.png")) std::cerr << "Failed to load fragment.png!";
     if (!assets.infobar.loadFromFile("./images/misc/infobar.png")) std::cerr << "Failed to load infobar.png!";
     if (!assets.loadscr.loadFromFile("./images/misc/loadscr.png")) std::cerr << "Failed to load loadscr.png!";
+    if (!assets.title.loadFromFile("./images/misc/title.png")) std::cerr << "Failed to load title.png!";
 }
 
 void load_sounds(Assets & assets)

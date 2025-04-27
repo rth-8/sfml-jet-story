@@ -20,6 +20,7 @@ struct Maze
     int current_room_col = 0;
     std::vector<Room> rooms;
     int base_cnt = 0;
+    bool created;
 };
 
 struct MazeData;

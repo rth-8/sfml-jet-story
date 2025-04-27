@@ -16,7 +16,8 @@
 #include "menu.h"
 #include "scene_game.h"
 
-#define MAIN_MENU_CHAR_SIZE 32
+#define WINDOW_W 800
+#define WINDOW_H 600
 
 enum Scenes
 {
@@ -24,6 +25,25 @@ enum Scenes
     SCENE_MAIN_MENU,
     SCENE_GAME,
 };
+
+#define MAIN_MENU_X 150
+#define MAIN_MENU_Y 230
+#define MAIN_MENU_BTN_W 500
+#define MAIN_MENU_BTN_H 50
+#define MAIN_MENU_V_PAD 20
+#define MAIN_MENU_CHAR_SIZE 32
+
+void setup_main_menu(Menu & m, const Assets & assets)
+{
+    const auto btnSize = sf::Vector2f(MAIN_MENU_BTN_W, MAIN_MENU_BTN_H);
+    add_button(m, "New Game", {MAIN_MENU_X, MAIN_MENU_Y}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "Continue", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "Load",     {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "Save",     {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "Quit",     {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    m.current = 0;
+    m.buttons[m.current].rect.setOutlineColor(sf::Color::Yellow);
+}
 
 void new_game(Ship & ship, Maze & maze, const MazeData & mazeData, const Assets & assets)
 {
@@ -33,13 +53,14 @@ void new_game(Ship & ship, Maze & maze, const MazeData & mazeData, const Assets 
     maze.base_cnt = 0;
     create_maze(maze, mazeData, assets);
     reset_ship(ship, {200,310});
+    maze.created = true;
 }
 
 int main()
 {
     std::srand(std::time({}));
 
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "js");
+    sf::RenderWindow window(sf::VideoMode({WINDOW_W, WINDOW_H}), "js");
     window.setFramerateLimit(60);
     window.setKeyRepeatEnabled(false);
 
@@ -62,6 +83,7 @@ int main()
     load_maze(mazeData);
     
     Maze maze;
+    maze.created = false;
     
     Ship ship;
     create_ship(ship, assets);
@@ -77,22 +99,22 @@ int main()
     InfoBar infobar;
     create_infobar(infobar, assets);
 
-    sf::Texture titleTex("./images/misc/loadscr.png");
-    sf::Sprite titleSpr(titleTex);
+    sf::Sprite loadingScreenSpr(assets.loadscr);
+    sf::Sprite titleSpr(assets.title);
 
     Menu mainMenu;
-    add_button(mainMenu, "New Game", {10,10}, {500,50}, assets.font_menu, MAIN_MENU_CHAR_SIZE);
-    add_button(mainMenu, "Continue", {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font_menu, MAIN_MENU_CHAR_SIZE);
-    add_button(mainMenu, "Load",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font_menu, MAIN_MENU_CHAR_SIZE);
-    add_button(mainMenu, "Save",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font_menu, MAIN_MENU_CHAR_SIZE);
-    add_button(mainMenu, "Quit",     {10,mainMenu.buttons[mainMenu.buttons.size()-1].rect.getPosition().y + 50 + 10}, {500,50}, assets.font_menu, MAIN_MENU_CHAR_SIZE);
-    
-    mainMenu.current = 0;
-    mainMenu.buttons[mainMenu.current].rect.setOutlineColor(sf::Color::Yellow);
+    setup_main_menu(mainMenu, assets);
 
     mainMenu.buttons[0].callback = [&ship, &maze, &mazeData, &assets, &current_scene] () {
         new_game(ship, maze, mazeData, assets);
         current_scene = SCENE_GAME;
+    };
+
+    mainMenu.buttons[1].callback = [&maze, &current_scene] () {
+        if (maze.created)
+        {
+            current_scene = SCENE_GAME;
+        }
     };
 
     mainMenu.buttons[4].callback = [&window] () {
@@ -117,6 +139,20 @@ int main()
             {
                 menu_input(mainMenu, event);
             }
+            else
+            if (current_scene == SCENE_GAME)
+            {
+                if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+                {
+                    if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
+                    {
+                        mainMenu.buttons[mainMenu.current].rect.setOutlineColor(sf::Color::White);
+                        mainMenu.current = 1;
+                        mainMenu.buttons[mainMenu.current].rect.setOutlineColor(sf::Color::Yellow);
+                        current_scene = SCENE_MAIN_MENU;
+                    }
+                }
+            }
         }
 
         if (current_scene == SCENE_TITLE)
@@ -126,13 +162,14 @@ int main()
                 current_scene = SCENE_MAIN_MENU;
             }
             window.clear();
-            window.draw(titleSpr);
+            window.draw(loadingScreenSpr);
             window.display();
         }
         else
         if (current_scene == SCENE_MAIN_MENU)
         {
             window.clear();
+            window.draw(titleSpr);
             draw_menu(window, mainMenu);
             window.display();
         }

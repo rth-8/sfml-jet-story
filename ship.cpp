@@ -34,6 +34,15 @@ void reset_ship(Ship & ship, const sf::Vector2f & pos)
     ship.score = 0;
     ship.thrust_up = false;
     ship.thrust_horiz = false;
+
+    if (ship.cannon.has_value())
+    {
+        ship.cannon.reset();
+    }
+    if (ship.special.has_value())
+    {
+        ship.special.reset();
+    }
 }
 
 void move_ship(float dt, Ship & ship)

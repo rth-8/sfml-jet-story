@@ -52,6 +52,7 @@ struct Assets
     sf::Texture fragment;
     sf::Texture infobar;
     sf::Texture loadscr;
+    sf::Texture title;
     std::map<SoundTypes, sf::SoundBuffer> sounds;
     sf::Font font_menu;
     sf::Font font_infobar;
