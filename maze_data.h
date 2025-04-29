@@ -55,11 +55,11 @@ struct MazeData
     std::vector<EnemySpec> enemy_specs;
 };
 
-void load_walls(RoomData & room, const int & row, const int & col);
-void load_items(RoomData & room, const int & row, const int & col);
-void load_enemies(RoomData & room, const int & row, const int & col);
-void load_room(RoomData & room, const int & row, const int & col);
+void load_wall_data(RoomData & room, const int & row, const int & col);
+void load_item_data(RoomData & room, const int & row, const int & col);
+void load_enemy_data(RoomData & room, const int & row, const int & col);
+void load_room_data(RoomData & room, const int & row, const int & col);
 void load_enemy_specs(MazeData & maze);
-void load_maze(MazeData & maze);
+void load_maze_data(MazeData & maze);
 
 #endif

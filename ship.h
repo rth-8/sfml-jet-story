@@ -20,15 +20,14 @@ struct Ship
     Animation ship_flame_back;
     sf::Vector2f previous_position;
     sf::Vector2f velocity;
-    int shield;
+    uint16_t shield;
     float fuel;
     int damage_delay;
-    int score;
 
     std::optional<Animation> cannon;
     sf::Vector2f cannon_previous_position;
     sf::Vector2f cannon_velocity;
-    int cannon_ammo;
+    uint16_t cannon_ammo;
 
     std::optional<Animation> special;
     SpecialType special_type;
@@ -63,5 +62,8 @@ void collision_ship_wall(Ship & ship, Animation & wall);
 void collision_cannon_wall(Ship & ship, Animation & wall);
 void collision_special_wall(Ship & ship, Animation & wall, Sounds & sounds);
 void collision_ship_item(Ship & ship, Animation & item, Sounds & sounds);
+
+void load_ship(Ship & ship, int slot);
+void save_ship(Ship & ship, int slot);
 
 #endif

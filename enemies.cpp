@@ -95,6 +95,7 @@ void create_enemy_anim(Animation & anim, const int & id, const int & subid, cons
             case 20: create_animation(anim, id, assets.enemies[id + subid], 50, 50, 2, 6); break;
         }
     }
+    anim.subid = subid;
 }
 
 /*

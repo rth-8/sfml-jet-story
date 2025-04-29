@@ -6,7 +6,7 @@
 #include "ship.h"
 #include "sounds.h"
 
-Projectile & create_projectile(Projectiles & projectiles, Sounds & sounds, const Assets & assets, int id)
+Projectile & create_projectile(Projectiles & projectiles, Sounds & sounds, const Assets & assets, uint16_t id)
 {
     Projectile prj;
     auto & tex = assets.enemy_shots.at(id);

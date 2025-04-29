@@ -2,9 +2,10 @@
 
 #include "animation.h"
 
-void create_animation(Animation & anim, int id, const sf::Texture & tex, float fw, float fh, int fc, int spd)
+void create_animation(Animation & anim, uint16_t id, const sf::Texture & tex, float fw, float fh, int fc, int spd)
 {
     anim.id = id;
+    anim.subid = 0;
     // frame size
     anim.size.x = fw;
     anim.size.y = fh;

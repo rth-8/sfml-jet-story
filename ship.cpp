@@ -1,7 +1,7 @@
-#include "ship.h"
-
 #include <iostream>
+#include <fstream>
 
+#include "ship.h"
 #include "assets.h"
 #include "maze.h"
 #include "common.h"
@@ -13,10 +13,10 @@
 
 void create_ship(Ship & ship, const Assets & assets)
 {
-    create_animation(ship.ship_body, 0, assets.ship, assets.ship.getSize().x, assets.ship.getSize().y);
-    create_animation(ship.ship_flame_back, 0, assets.ship_flame_back, 43, 35, 2, 4);
-    create_animation(ship.ship_flame_down_big, 0, assets.ship_flame_down_big, 32, 44, 2, 4);
-    create_animation(ship.ship_flame_down_small, 0, assets.ship_flame_down_small, 19, 38, 2, 4);
+    create_animation(ship.ship_body, (uint16_t)0, assets.ship, assets.ship.getSize().x, assets.ship.getSize().y);
+    create_animation(ship.ship_flame_back, (uint16_t)0, assets.ship_flame_back, 43, 35, 2, 4);
+    create_animation(ship.ship_flame_down_big, (uint16_t)0, assets.ship_flame_down_big, 32, 44, 2, 4);
+    create_animation(ship.ship_flame_down_small, (uint16_t)0, assets.ship_flame_down_small, 19, 38, 2, 4);
 }
 
 void reset_ship(Ship & ship, const sf::Vector2f & pos)
@@ -31,7 +31,7 @@ void reset_ship(Ship & ship, const sf::Vector2f & pos)
     ship.special_type = SpecialType::BALL;
     ship.next_special = INT_MAX;
     ship.special_ammo = 4;
-    ship.score = 0;
+
     ship.thrust_up = false;
     ship.thrust_horiz = false;
 
@@ -270,6 +270,7 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
     {
         // std::cout << "NEXT ROOM: left\n";
         maze.current_room_col--;
+        get_current_room(maze).visited = true;
         ship.ship_body.sprite.value().setPosition({EDGE_RIGHT - ship.ship_body.half_size.x, ship.ship_body.sprite.value().getPosition().y});
         ship_next_room(ship);
         return true;
@@ -278,6 +279,7 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
     {
         // std::cout << "NEXT ROOM: right\n";
         maze.current_room_col++;
+        get_current_room(maze).visited = true;
         ship.ship_body.sprite.value().setPosition({EDGE_LEFT + ship.ship_body.half_size.x, ship.ship_body.sprite.value().getPosition().y});
         ship_next_room(ship);
         return true;
@@ -286,6 +288,7 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
     {
         // std::cout << "NEXT ROOM: up\n";
         maze.current_room_row--;
+        get_current_room(maze).visited = true;
         ship.ship_body.sprite.value().setPosition({ship.ship_body.sprite.value().getPosition().x, EDGE_BOTTOM - ship.ship_body.half_size.y});
         ship_next_room(ship);
         return true;
@@ -294,6 +297,7 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
     {
         // std::cout << "NEXT ROOM: down\n";
         maze.current_room_row++;
+        get_current_room(maze).visited = true;
         ship.ship_body.sprite.value().setPosition({ship.ship_body.sprite.value().getPosition().x, EDGE_TOP + ship.ship_body.half_size.y});
         ship_next_room(ship);
         return true;
@@ -445,5 +449,58 @@ void collision_ship_item(Ship & ship, Animation & item, Sounds & sounds)
         }
         item.isAlive = false;
         sounds.sounds.at(GET_ITEM).play();
+    }
+}
+
+void load_ship(Ship & ship, int slot)
+{
+    std::cout << "Load ship: " << slot << "\n";
+
+    std::ifstream input;
+    input.open(std::format("./save{:03d}s", slot), std::ios::binary);
+    if (input.is_open())
+    {
+        float x, y;
+        input.read(reinterpret_cast <char*>(&x), sizeof(float));
+        input.read(reinterpret_cast <char*>(&y), sizeof(float));
+        ship.ship_body.sprite.value().setPosition({x, y});
+
+        input.read(reinterpret_cast <char*>(&ship.shield), sizeof(uint16_t));
+        input.read(reinterpret_cast <char*>(&ship.fuel), sizeof(float));
+        input.read(reinterpret_cast <char*>(&ship.cannon_ammo), sizeof(uint16_t));
+        input.read(reinterpret_cast <char*>(&ship.special_type), sizeof(SpecialType));
+        input.read(reinterpret_cast <char*>(&ship.special_ammo), sizeof(uint8_t));
+
+        ship.damage_delay = 0;
+        ship.next_special = INT_MAX;
+
+        ship.thrust_up = false;
+        ship.thrust_horiz = false;
+
+        input.close();
+    }
+}
+
+void save_ship(Ship & ship, int slot)
+{
+    std::cout << "Save ship: " << slot << "\n";
+
+    std::ofstream output;
+    output.open(std::format("./save{:03d}s", slot), std::ios::binary);
+    if (output.is_open())
+    {
+        float x = ship.ship_body.sprite.value().getPosition().x;
+        float y = ship.ship_body.sprite.value().getPosition().y;
+
+        output.write(reinterpret_cast <char*>(&x), sizeof(float));
+        output.write(reinterpret_cast <char*>(&y), sizeof(float));
+
+        output.write(reinterpret_cast <char*>(&ship.shield), sizeof(uint16_t));
+        output.write(reinterpret_cast <char*>(&ship.fuel), sizeof(float));
+        output.write(reinterpret_cast <char*>(&ship.cannon_ammo), sizeof(uint16_t));
+        output.write(reinterpret_cast <char*>(&ship.special_type), sizeof(SpecialType));
+        output.write(reinterpret_cast <char*>(&ship.special_ammo), sizeof(uint8_t));
+
+        output.close();
     }
 }

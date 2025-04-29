@@ -10,8 +10,8 @@ struct Enemy
     std::optional<Animation> carried_item;
     sf::Vector2f previous_position;
     sf::Vector2f velocity;
-    int health;
-    int carried_enemy_health;
+    uint16_t health;
+    uint16_t carried_enemy_health;
     float shooting_counter;
     float shooting_speed;
     float shooting_delay;

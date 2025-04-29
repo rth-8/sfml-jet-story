@@ -5,7 +5,7 @@
 
 #include "maze_data.h"
 
-void load_walls(RoomData & room, const int & row, const int & col)
+void load_wall_data(RoomData & room, const int & row, const int & col)
 {
     auto fileName = std::format("./data/rooms/room{}{}.txt", row, col);
     std::fstream input;
@@ -25,7 +25,7 @@ void load_walls(RoomData & room, const int & row, const int & col)
     }
 }
 
-void load_items(RoomData & room, const int & row, const int & col)
+void load_item_data(RoomData & room, const int & row, const int & col)
 {
     auto fileName = std::format("./data/items/item{}{}.txt", row, col);
     std::fstream input;
@@ -45,7 +45,7 @@ void load_items(RoomData & room, const int & row, const int & col)
     }
 }
 
-void load_enemies(RoomData & room, const int & row, const int & col)
+void load_enemy_data(RoomData & room, const int & row, const int & col)
 {
     auto fileName = std::format("./data/enemies/enemy{}{}.txt", row, col);
     std::fstream input;
@@ -81,14 +81,14 @@ void load_enemies(RoomData & room, const int & row, const int & col)
     }
 }
 
-void load_room(RoomData & room, const int & row, const int & col)
+void load_room_data(RoomData & room, const int & row, const int & col)
 {
     room.row = row;
     room.col = col;
 
-    load_walls(room, row, col);
-    load_items(room, row, col);
-    load_enemies(room, row, col);
+    load_wall_data(room, row, col);
+    load_item_data(room, row, col);
+    load_enemy_data(room, row, col);
 }
 
 void load_enemy_specs(MazeData & maze)
@@ -121,14 +121,14 @@ void load_enemy_specs(MazeData & maze)
     }
 }
 
-void load_maze(MazeData & maze)
+void load_maze_data(MazeData & maze)
 {
     for (int r=0; r<ROWS; ++r)
     {
         for (int c=0; c<COLS; ++c)
         {
             RoomData room;
-            load_room(room, r, c);
+            load_room_data(room, r, c);
             maze.rooms.push_back(room);
         }
     }

@@ -138,7 +138,7 @@ void update_infobar(InfoBar & ib, const Maze & maze, const Ship & ship, const As
     }
     if (ib.score.has_value())
     {
-        ib.score.value().setString(std::format("{:06d}", ship.score));
+        ib.score.value().setString(std::format("{:06d}", maze.score));
     }
 
     if (gFrame % 10 == 0)

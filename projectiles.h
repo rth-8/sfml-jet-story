@@ -21,7 +21,7 @@ struct Ship;
 struct Explosions;
 struct Sounds;
 
-Projectile & create_projectile(Projectiles & projectiles, Sounds & sounds, const Assets & assets, int id);
+Projectile & create_projectile(Projectiles & projectiles, Sounds & sounds, const Assets & assets, uint16_t id);
 void move_projectile(Projectile & prj, Sounds & sounds, float dt);
 void collision_projectile_wall(Projectile & prj, Animation & wall, Explosions & explosions, Sounds & sounds, const Assets & assets);
 void collision_projectile_ship(Projectile & prj, Ship & ship, Explosions & explosions, Sounds & sounds, const Assets & assets);

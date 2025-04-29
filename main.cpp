@@ -24,6 +24,8 @@ enum Scenes
     SCENE_TITLE,
     SCENE_MAIN_MENU,
     SCENE_GAME,
+    SCENE_LOAD,
+    SCENE_SAVE
 };
 
 #define MAIN_MENU_X 150
@@ -45,6 +47,46 @@ void setup_main_menu(Menu & m, const Assets & assets)
     m.buttons[m.current].rect.setOutlineColor(sf::Color::Yellow);
 }
 
+void setup_load_menu(Menu & m, Maze & maze, Ship & ship, const MazeData & mazeData, const Assets & assets)
+{
+    const auto btnSize = sf::Vector2f(MAIN_MENU_BTN_W, MAIN_MENU_BTN_H);
+    add_button(m, "---", {MAIN_MENU_X, MAIN_MENU_Y}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "---", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "---", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "---", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "---", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    m.current = 0;
+    m.buttons[m.current].rect.setOutlineColor(sf::Color::Yellow);
+
+    for (auto & btn : m.buttons)
+    {
+        btn.callback = [&maze, &ship, &mazeData, &assets, &m] () {
+            load_maze(maze, mazeData, assets, m.current);
+            load_ship(ship, m.current);
+        };
+    }
+}
+
+void setup_save_menu(Menu & m, Maze & maze, Ship & ship, const Assets & assets)
+{
+    const auto btnSize = sf::Vector2f(MAIN_MENU_BTN_W, MAIN_MENU_BTN_H);
+    add_button(m, "---", {MAIN_MENU_X, MAIN_MENU_Y}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "---", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "---", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "---", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "---", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    m.current = 0;
+    m.buttons[m.current].rect.setOutlineColor(sf::Color::Yellow);
+
+    for (auto & btn : m.buttons)
+    {
+        btn.callback = [&maze, &ship, &m] () {
+            save_maze(maze, m.current);
+            save_ship(ship, m.current);
+        };
+    }
+}
+
 void new_game(Ship & ship, Maze & maze, const MazeData & mazeData, const Assets & assets)
 {
     maze.rooms.clear();
@@ -52,8 +94,9 @@ void new_game(Ship & ship, Maze & maze, const MazeData & mazeData, const Assets 
     maze.current_room_col = 0;
     maze.base_cnt = 0;
     create_maze(maze, mazeData, assets);
-    reset_ship(ship, {200,310});
+    get_current_room(maze).visited = true;
     maze.created = true;
+    reset_ship(ship, {200,310});
 }
 
 int main()
@@ -80,7 +123,7 @@ int main()
     load_font(assets);
     
     MazeData mazeData;
-    load_maze(mazeData);
+    load_maze_data(mazeData);
     
     Maze maze;
     maze.created = false;
@@ -111,15 +154,26 @@ int main()
     };
 
     mainMenu.buttons[1].callback = [&maze, &current_scene] () {
-        if (maze.created)
-        {
-            current_scene = SCENE_GAME;
-        }
+        if (maze.created) current_scene = SCENE_GAME;
+    };
+
+    mainMenu.buttons[2].callback = [&maze, &current_scene] () {
+        current_scene = SCENE_LOAD;
+    };
+
+    mainMenu.buttons[3].callback = [&maze, &current_scene] () {
+        if (maze.created) current_scene = SCENE_SAVE;
     };
 
     mainMenu.buttons[4].callback = [&window] () {
         window.close();
     };
+
+    Menu loadMenu;
+    setup_load_menu(loadMenu, maze, ship, mazeData, assets);
+
+    Menu saveMenu;
+    setup_save_menu(saveMenu, maze, ship, assets);
 
     while (window.isOpen())
     {
@@ -153,6 +207,32 @@ int main()
                     }
                 }
             }
+            else
+            if (current_scene == SCENE_LOAD)
+            {
+                menu_input(loadMenu, event);
+
+                if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+                {
+                    if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
+                    {
+                        current_scene = SCENE_MAIN_MENU;
+                    }
+                }
+            }
+            else
+            if (current_scene == SCENE_SAVE)
+            {
+                menu_input(saveMenu, event);
+
+                if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+                {
+                    if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
+                    {
+                        current_scene = SCENE_MAIN_MENU;
+                    }
+                }
+            }
         }
 
         if (current_scene == SCENE_TITLE)
@@ -171,6 +251,20 @@ int main()
             window.clear();
             window.draw(titleSpr);
             draw_menu(window, mainMenu);
+            window.display();
+        }
+        else
+        if (current_scene == SCENE_LOAD)
+        {
+            window.clear();
+            draw_menu(window, loadMenu);
+            window.display();
+        }
+        else
+        if (current_scene == SCENE_SAVE)
+        {
+            window.clear();
+            draw_menu(window, saveMenu);
             window.display();
         }
         else

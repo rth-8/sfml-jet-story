@@ -4,7 +4,7 @@
 void create_fragment(Explosions & explosions, const sf::Vector2f & pos, const sf::Vector2f & velocity, const Assets & assets)
 {
     Fragment fg;
-    create_animation(fg.anim, 0, assets.fragment, 24, 24, 5, 20);
+    create_animation(fg.anim, (uint16_t)0, assets.fragment, 24, 24, 5, 20);
     fg.anim.sprite.value().setPosition(pos);
     set_frame(fg.anim, std::rand() % fg.anim.frame_count);
     fg.velocity = velocity;
@@ -14,7 +14,7 @@ void create_fragment(Explosions & explosions, const sf::Vector2f & pos, const sf
 void create_explosion(Explosions & explosions, const sf::Vector2f & pos, const Assets & assets)
 {
     Animation expl;
-    create_animation(expl, 0, assets.explosion, 50, 50, 6, 6);
+    create_animation(expl, (uint16_t)0, assets.explosion, 50, 50, 6, 6);
     expl.sprite.value().setPosition(pos);
     explosions.explosions.push_back(expl);
 
