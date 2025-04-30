@@ -164,7 +164,7 @@ void create_enemy(Enemy & eo, const EnemyData & ed, const MazeData & md, const A
         }
 
         eo.carried_enemy.value().color_index = std::rand()%7+9;
-        eo.carried_enemy.value().sprite.value().setColor(zx_colors[eo.anim.color_index]);
+        eo.carried_enemy.value().sprite.value().setColor(zx_colors[eo.carried_enemy.value().color_index]);
     }
 
     if (ed.carried_item.has_value())

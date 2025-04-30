@@ -454,7 +454,7 @@ void collision_ship_item(Ship & ship, Animation & item, Sounds & sounds)
 
 void load_ship(Ship & ship, int slot)
 {
-    std::cout << "Load ship: " << slot << "\n";
+    // std::cout << "Load ship: " << slot << "\n";
 
     std::ifstream input;
     input.open(std::format("./save{:03d}s", slot), std::ios::binary);
@@ -483,7 +483,7 @@ void load_ship(Ship & ship, int slot)
 
 void save_ship(Ship & ship, int slot)
 {
-    std::cout << "Save ship: " << slot << "\n";
+    // std::cout << "Save ship: " << slot << "\n";
 
     std::ofstream output;
     output.open(std::format("./save{:03d}s", slot), std::ios::binary);

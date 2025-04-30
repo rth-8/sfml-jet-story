@@ -45,7 +45,7 @@ void load_item_data(RoomData & room, const int & row, const int & col)
     }
 }
 
-void load_enemy_data(RoomData & room, const int & row, const int & col)
+void load_enemy_data(RoomData & room, MazeData & maze, const int & row, const int & col)
 {
     auto fileName = std::format("./data/enemies/enemy{}{}.txt", row, col);
     std::fstream input;
@@ -59,6 +59,12 @@ void load_enemy_data(RoomData & room, const int & row, const int & col)
         {
             EnemyData en;
             input >> sep >> en.x >> en.y >> en.id >> en.subid;
+
+            if (en.id == 0)
+            {
+                maze.base_cnt++;
+            }
+
             if (en.id == 20)
             {
                 input >> sep >> ctype;
@@ -67,6 +73,11 @@ void load_enemy_data(RoomData & room, const int & row, const int & col)
                     en.carried_enemy = std::make_optional<CarriedEnemyData>();
                     auto & cen = en.carried_enemy.value();
                     input >> cen.x >> cen.y >> cen.id >> cen.subid;
+
+                    if (cen.id == 0)
+                    {
+                        maze.base_cnt++;
+                    }
                 }
                 else
                 {
@@ -81,14 +92,14 @@ void load_enemy_data(RoomData & room, const int & row, const int & col)
     }
 }
 
-void load_room_data(RoomData & room, const int & row, const int & col)
+void load_room_data(RoomData & room, MazeData & maze, const int & row, const int & col)
 {
     room.row = row;
     room.col = col;
 
     load_wall_data(room, row, col);
     load_item_data(room, row, col);
-    load_enemy_data(room, row, col);
+    load_enemy_data(room, maze, row, col);
 }
 
 void load_enemy_specs(MazeData & maze)
@@ -123,12 +134,14 @@ void load_enemy_specs(MazeData & maze)
 
 void load_maze_data(MazeData & maze)
 {
+    maze.base_cnt = 0;
+    
     for (int r=0; r<ROWS; ++r)
     {
         for (int c=0; c<COLS; ++c)
         {
             RoomData room;
-            load_room_data(room, r, c);
+            load_room_data(room, maze, r, c);
             maze.rooms.push_back(room);
         }
     }

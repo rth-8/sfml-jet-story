@@ -89,15 +89,18 @@ void update_item(Animation & item, int gFrame)
 
 void load_maze(Maze & mo, const MazeData & mazeData, const Assets & assets, int slot)
 {
-    std::cout << "Load maze: " << slot << "\n";
+    // std::cout << "Load maze: " << slot << "\n";
 
     std::ifstream input;
     input.open(std::format("./save{:03d}m", slot), std::ios::binary);
     if (input.is_open())
     {
+        // base count loaded to separate value, it will be used after all rooms are created
+        uint16_t baseCnt;
+
+        input.read(reinterpret_cast <char*>(&baseCnt), sizeof(uint16_t));
         input.read(reinterpret_cast <char*>(&mo.current_room_row), sizeof(uint16_t));
         input.read(reinterpret_cast <char*>(&mo.current_room_col), sizeof(uint16_t));
-        input.read(reinterpret_cast <char*>(&mo.base_cnt), sizeof(uint16_t));
         input.read(reinterpret_cast <char*>(&mo.score), sizeof(uint16_t));
 
         std::vector<bool> visited;
@@ -172,6 +175,9 @@ void load_maze(Maze & mo, const MazeData & mazeData, const Assets & assets, int 
                             }
 
                             input.read(reinterpret_cast <char*>(&eo.carried_enemy_health), sizeof(uint16_t));
+                            input.read(reinterpret_cast <char*>(&eo.carried_enemy.value().color_index), sizeof(uint16_t));
+
+                            eo.carried_enemy.value().sprite.value().setColor(zx_colors[eo.carried_enemy.value().color_index]);
 
                             eo.shooting_delay = mazeData.enemy_specs[id].shooting_delay;
                             eo.shooting_speed = mazeData.enemy_specs[id].shooting_speed;
@@ -224,6 +230,7 @@ void load_maze(Maze & mo, const MazeData & mazeData, const Assets & assets, int 
             }
         }
 
+        mo.base_cnt = baseCnt;
         mo.created = true;
 
         input.close();
@@ -232,15 +239,15 @@ void load_maze(Maze & mo, const MazeData & mazeData, const Assets & assets, int 
 
 void save_maze(Maze & mo, int slot)
 {
-    std::cout << "Save maze: " << slot << "\n";
+    // std::cout << "Save maze: " << slot << "\n";
 
     std::ofstream output;
     output.open(std::format("./save{:03d}m", slot), std::ios::binary);
     if (output.is_open())
     {
+        output.write(reinterpret_cast <char*>(&mo.base_cnt), sizeof(uint16_t));
         output.write(reinterpret_cast <char*>(&mo.current_room_row), sizeof(uint16_t));
         output.write(reinterpret_cast <char*>(&mo.current_room_col), sizeof(uint16_t));
-        output.write(reinterpret_cast <char*>(&mo.base_cnt), sizeof(uint16_t));
         output.write(reinterpret_cast <char*>(&mo.score), sizeof(uint16_t));
 
         for (auto & room : mo.rooms)
@@ -276,6 +283,7 @@ void save_maze(Maze & mo, int slot)
                         output.write(reinterpret_cast <char*>(&enemy.carried_enemy.value().id), sizeof(uint16_t));
                         output.write(reinterpret_cast <char*>(&enemy.carried_enemy.value().subid), sizeof(uint16_t));
                         output.write(reinterpret_cast <char*>(&enemy.carried_enemy_health), sizeof(uint16_t));
+                        output.write(reinterpret_cast <char*>(&enemy.carried_enemy.value().color_index), sizeof(uint16_t));
                     }
 
                     bool ci = enemy.carried_item.has_value();

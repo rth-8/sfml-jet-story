@@ -53,12 +53,13 @@ struct MazeData
 {
     std::vector<RoomData> rooms;
     std::vector<EnemySpec> enemy_specs;
+    uint16_t base_cnt;
 };
 
 void load_wall_data(RoomData & room, const int & row, const int & col);
 void load_item_data(RoomData & room, const int & row, const int & col);
-void load_enemy_data(RoomData & room, const int & row, const int & col);
-void load_room_data(RoomData & room, const int & row, const int & col);
+void load_enemy_data(RoomData & room, MazeData & maze, const int & row, const int & col);
+void load_room_data(RoomData & room, MazeData & maze, const int & row, const int & col);
 void load_enemy_specs(MazeData & maze);
 void load_maze_data(MazeData & maze);
 
