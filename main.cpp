@@ -26,15 +26,26 @@ enum Scenes
     SCENE_MAIN_MENU,
     SCENE_GAME,
     SCENE_LOAD,
-    SCENE_SAVE
+    SCENE_SAVE,
+    SCENE_GAME_OVER,
+};
+
+enum MainMenuButtons
+{
+    BTN_NEW_GAME = 0,
+    BTN_CONTINUE,
+    BTN_LOAD,
+    BTN_SAVE,
+    BTN_SETTINGS,
+    BTN_QUIT,
 };
 
 #define MAIN_MENU_X 150
 #define MAIN_MENU_Y 230
 #define MAIN_MENU_BTN_W 500
-#define MAIN_MENU_BTN_H 50
-#define MAIN_MENU_V_PAD 20
-#define MAIN_MENU_CHAR_SIZE 32
+#define MAIN_MENU_BTN_H 40
+#define MAIN_MENU_V_PAD 22
+#define MAIN_MENU_CHAR_SIZE 24
 
 void new_game(Ship & ship, Maze & maze, const MazeData & mazeData, const Assets & assets)
 {
@@ -70,33 +81,34 @@ void setup_main_menu(Menu & m, sf::RenderWindow & window, Ship & ship, Maze & ma
     add_button(m, "Continue", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
     add_button(m, "Load",     {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
     add_button(m, "Save",     {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    add_button(m, "Settings", {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
     add_button(m, "Quit",     {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
     
-    m.current = 0;
+    m.current = BTN_NEW_GAME;
     m.buttons[m.current].selected = true;
-    m.buttons[1].enabled = false;
-    m.buttons[3].enabled = false;
+    m.buttons[BTN_CONTINUE].enabled = false;
+    m.buttons[BTN_SAVE].enabled = false;
 
-    m.buttons[0].callback = [&ship, &maze, &mazeData, &assets, &m, &current_scene] () {
+    m.buttons[BTN_NEW_GAME].callback = [&ship, &maze, &mazeData, &assets, &m, &current_scene] () {
         new_game(ship, maze, mazeData, assets);
-        m.buttons[1].enabled = true;
-        m.buttons[3].enabled = true;
+        m.buttons[BTN_CONTINUE].enabled = true;
+        m.buttons[BTN_SAVE].enabled = true;
         current_scene = SCENE_GAME;
     };
 
-    m.buttons[1].callback = [&maze, &current_scene] () {
+    m.buttons[BTN_CONTINUE].callback = [&maze, &current_scene] () {
         if (maze.created) current_scene = SCENE_GAME;
     };
 
-    m.buttons[2].callback = [&maze, &current_scene] () {
+    m.buttons[BTN_LOAD].callback = [&maze, &current_scene] () {
         current_scene = SCENE_LOAD;
     };
 
-    m.buttons[3].callback = [&maze, &current_scene] () {
+    m.buttons[BTN_SAVE].callback = [&maze, &current_scene] () {
         if (maze.created) current_scene = SCENE_SAVE;
     };
 
-    m.buttons[4].callback = [&window] () {
+    m.buttons[BTN_QUIT].callback = [&window] () {
         window.close();
     };
 }
@@ -104,7 +116,7 @@ void setup_main_menu(Menu & m, sf::RenderWindow & window, Ship & ship, Maze & ma
 void back_to_main_menu_continue(Menu & m)
 {
     m.buttons[m.current].selected = false;
-    m.current = 1;
+    m.current = BTN_CONTINUE;
     m.buttons[m.current].selected = true;
 }
 
@@ -152,8 +164,8 @@ void setup_slots_menu(Menu & m, Menu & mainMenu, Maze & maze, Ship & ship, const
                 if (load_game(maze, ship, mazeData, assets, m.current))
                 {
                     back_to_main_menu_continue(mainMenu);
-                    m.buttons[1].enabled = true;
-                    m.buttons[3].enabled = true;
+                    mainMenu.buttons[BTN_CONTINUE].enabled = true;
+                    mainMenu.buttons[BTN_SAVE].enabled = true;
                     current_scene = SCENE_MAIN_MENU;
                 }
             }
@@ -224,6 +236,11 @@ int main()
     Menu slotsMenu;
     setup_slots_menu(slotsMenu, mainMenu, maze, ship, mazeData, assets, current_scene);
 
+    sf::Text loadText(assets.font_menu);
+    sf::Text saveText(assets.font_menu);
+    loadText.setString("Load game");
+    saveText.setString("Save game");
+
     while (window.isOpen())
     {
         sf::Time dt = clock.restart();
@@ -291,6 +308,8 @@ int main()
         if (current_scene == SCENE_LOAD || current_scene == SCENE_SAVE)
         {
             window.clear();
+            if (current_scene == SCENE_LOAD) window.draw(loadText);
+            else if (current_scene == SCENE_SAVE) window.draw(saveText);
             draw_menu(window, slotsMenu);
             window.display();
         }
