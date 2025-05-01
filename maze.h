@@ -36,7 +36,7 @@ void create_maze(Maze & mo, const MazeData & mazeData, const Assets & assets);
 Room & get_current_room(Maze & mo);
 void update_item(Animation & item, int gFrame);
 
-void load_maze(Maze & mo, const MazeData & mazeData, const Assets & assets, int slot);
-void save_maze(Maze & mo, int slot);
+bool load_maze(Maze & mo, const MazeData & mazeData, const Assets & assets, int slot);
+bool save_maze(Maze & mo, int slot);
 
 #endif

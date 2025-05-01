@@ -48,6 +48,20 @@ void new_game(Ship & ship, Maze & maze, const MazeData & mazeData, const Assets 
     reset_ship(ship, {200,310});
 }
 
+bool load_game(Maze & maze, Ship & ship, const MazeData & mazeData, const Assets & assets, int slot)
+{
+    bool r1 = load_maze(maze, mazeData, assets, slot);
+    bool r2 = load_ship(ship, slot);
+    return r1 && r2;
+}
+
+bool save_game(Maze & maze, Ship & ship, int slot)
+{
+    bool r1 = save_maze(maze, slot);
+    bool r2 = save_ship(ship, slot);
+    return r1 && r2;
+}
+
 void setup_main_menu(Menu & m, sf::RenderWindow & window, Ship & ship, Maze & maze, 
     const MazeData & mazeData, const Assets & assets, Scenes & current_scene)
 {
@@ -57,11 +71,16 @@ void setup_main_menu(Menu & m, sf::RenderWindow & window, Ship & ship, Maze & ma
     add_button(m, "Load",     {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
     add_button(m, "Save",     {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
     add_button(m, "Quit",     {MAIN_MENU_X, m.buttons[m.buttons.size()-1].rect.getPosition().y + MAIN_MENU_BTN_H + MAIN_MENU_V_PAD}, btnSize, assets.font_menu, MAIN_MENU_CHAR_SIZE);
+    
     m.current = 0;
-    m.buttons[m.current].rect.setOutlineColor(sf::Color::Yellow);
+    m.buttons[m.current].selected = true;
+    m.buttons[1].enabled = false;
+    m.buttons[3].enabled = false;
 
-    m.buttons[0].callback = [&ship, &maze, &mazeData, &assets, &current_scene] () {
+    m.buttons[0].callback = [&ship, &maze, &mazeData, &assets, &m, &current_scene] () {
         new_game(ship, maze, mazeData, assets);
+        m.buttons[1].enabled = true;
+        m.buttons[3].enabled = true;
         current_scene = SCENE_GAME;
     };
 
@@ -82,7 +101,15 @@ void setup_main_menu(Menu & m, sf::RenderWindow & window, Ship & ship, Maze & ma
     };
 }
 
-void setup_slots_menu(Menu & m, Maze & maze, Ship & ship, const MazeData & mazeData, const Assets & assets, Scenes & current_scene)
+void back_to_main_menu_continue(Menu & m)
+{
+    m.buttons[m.current].selected = false;
+    m.current = 1;
+    m.buttons[m.current].selected = true;
+}
+
+void setup_slots_menu(Menu & m, Menu & mainMenu, Maze & maze, Ship & ship, const MazeData & mazeData, 
+    const Assets & assets, Scenes & current_scene)
 {
     const auto btnSize = sf::Vector2f(MAIN_MENU_BTN_W, MAIN_MENU_BTN_H);
 
@@ -98,7 +125,7 @@ void setup_slots_menu(Menu & m, Maze & maze, Ship & ship, const MazeData & mazeD
             // std::cout << "max: " << mazeData.base_cnt << "\n";
             // std::cout << "slot: " << baseCnt << "\n";
             int prc = ((float)(mazeData.base_cnt - baseCnt) / (float)mazeData.base_cnt) * 100.0f;
-            btnName = std::format("{:d} ... {: d}%", (i+1), prc);
+            btnName = std::format("{:d} ... {: 3d}%", (i+1), prc);
             input.close();
         }
 
@@ -115,23 +142,31 @@ void setup_slots_menu(Menu & m, Maze & maze, Ship & ship, const MazeData & mazeD
     }
 
     m.current = 0;
-    m.buttons[m.current].rect.setOutlineColor(sf::Color::Yellow);
+    m.buttons[m.current].selected = true;
 
     for (auto & btn : m.buttons)
     {
-        btn.callback = [&maze, &ship, &mazeData, &assets, &m, &current_scene] () {
+        btn.callback = [&maze, &ship, &mazeData, &assets, &m, &mainMenu, &current_scene] () {
             if (current_scene == SCENE_LOAD)
             {
-                load_maze(maze, mazeData, assets, m.current);
-                load_ship(ship, m.current);
+                if (load_game(maze, ship, mazeData, assets, m.current))
+                {
+                    back_to_main_menu_continue(mainMenu);
+                    m.buttons[1].enabled = true;
+                    m.buttons[3].enabled = true;
+                    current_scene = SCENE_MAIN_MENU;
+                }
             }
             else
             if (current_scene == SCENE_SAVE)
             {
-                save_maze(maze, m.current);
-                save_ship(ship, m.current);
-                int prc = ((float)(mazeData.base_cnt - maze.base_cnt) / (float)mazeData.base_cnt) * 100.0f;
-                m.buttons[m.current].text.value().setString(std::format("{:d} ... {: d}%", (m.current+1), prc));
+                if (save_game(maze, ship, m.current))
+                {
+                    int prc = ((float)(mazeData.base_cnt - maze.base_cnt) / (float)mazeData.base_cnt) * 100.0f;
+                    set_button_string(m.buttons[m.current], std::format("{:d} ... {: 3d}%", (m.current+1), prc));
+                    back_to_main_menu_continue(mainMenu);
+                    current_scene = SCENE_MAIN_MENU;
+                }
             }
         };
     }
@@ -187,7 +222,7 @@ int main()
     setup_main_menu(mainMenu, window, ship, maze, mazeData, assets, current_scene);
 
     Menu slotsMenu;
-    setup_slots_menu(slotsMenu, maze, ship, mazeData, assets, current_scene);
+    setup_slots_menu(slotsMenu, mainMenu, maze, ship, mazeData, assets, current_scene);
 
     while (window.isOpen())
     {
@@ -214,9 +249,7 @@ int main()
                 {
                     if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
                     {
-                        mainMenu.buttons[mainMenu.current].rect.setOutlineColor(sf::Color::White);
-                        mainMenu.current = 1;
-                        mainMenu.buttons[mainMenu.current].rect.setOutlineColor(sf::Color::Yellow);
+                        back_to_main_menu_continue(mainMenu);
                         current_scene = SCENE_MAIN_MENU;
                     }
                 }

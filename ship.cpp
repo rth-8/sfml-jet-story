@@ -452,7 +452,7 @@ void collision_ship_item(Ship & ship, Animation & item, Sounds & sounds)
     }
 }
 
-void load_ship(Ship & ship, int slot)
+bool load_ship(Ship & ship, int slot)
 {
     // std::cout << "Load ship: " << slot << "\n";
 
@@ -478,10 +478,15 @@ void load_ship(Ship & ship, int slot)
         ship.thrust_horiz = false;
 
         input.close();
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 
-void save_ship(Ship & ship, int slot)
+bool save_ship(Ship & ship, int slot)
 {
     // std::cout << "Save ship: " << slot << "\n";
 
@@ -502,5 +507,10 @@ void save_ship(Ship & ship, int slot)
         output.write(reinterpret_cast <char*>(&ship.special_ammo), sizeof(uint8_t));
 
         output.close();
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }

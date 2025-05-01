@@ -14,6 +14,8 @@ struct Button
     sf::RectangleShape rect;
     std::optional<sf::Text> text;
     std::function<void()> callback;
+    bool enabled;
+    bool selected;
 };
 
 struct Menu
@@ -24,10 +26,11 @@ struct Menu
 
 void create_button(Button & button, std::string && str, const sf::Vector2f & pos, const sf::Vector2f & size, 
     const sf::Font & font, const unsigned int & charSize);
-void draw_button(sf::RenderWindow & window, const Button & button);
+void set_button_string(Button & button, std::string && str);
+void draw_button(sf::RenderWindow & window, Button & button);
 void add_button(Menu & menu, std::string && str, const sf::Vector2f & pos, const sf::Vector2f & size, 
     const sf::Font & font, const unsigned int & charSize);
-void draw_menu(sf::RenderWindow & window, const Menu & menu);
+void draw_menu(sf::RenderWindow & window, Menu & menu);
 void menu_input(Menu & menu, const std::optional<sf::Event> event);
 
 #endif

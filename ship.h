@@ -63,7 +63,7 @@ void collision_cannon_wall(Ship & ship, Animation & wall);
 void collision_special_wall(Ship & ship, Animation & wall, Sounds & sounds);
 void collision_ship_item(Ship & ship, Animation & item, Sounds & sounds);
 
-void load_ship(Ship & ship, int slot);
-void save_ship(Ship & ship, int slot);
+bool load_ship(Ship & ship, int slot);
+bool save_ship(Ship & ship, int slot);
 
 #endif

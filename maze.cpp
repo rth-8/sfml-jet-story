@@ -87,7 +87,7 @@ void update_item(Animation & item, int gFrame)
     }
 }
 
-void load_maze(Maze & mo, const MazeData & mazeData, const Assets & assets, int slot)
+bool load_maze(Maze & mo, const MazeData & mazeData, const Assets & assets, int slot)
 {
     // std::cout << "Load maze: " << slot << "\n";
 
@@ -234,10 +234,15 @@ void load_maze(Maze & mo, const MazeData & mazeData, const Assets & assets, int 
         mo.created = true;
 
         input.close();
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 
-void save_maze(Maze & mo, int slot)
+bool save_maze(Maze & mo, int slot)
 {
     // std::cout << "Save maze: " << slot << "\n";
 
@@ -312,5 +317,10 @@ void save_maze(Maze & mo, int slot)
         }
 
         output.close();
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
