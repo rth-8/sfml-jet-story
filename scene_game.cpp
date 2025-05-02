@@ -102,6 +102,21 @@ void scene_game_update(Ship & ship, Maze & maze, Projectiles & projectiles, Expl
     }
 }
 
+void scene_game_clear_all(Projectiles & projectiles, Explosions & explosions, Sounds & sounds)
+{
+    projectiles.projectiles.clear();
+    
+    explosions.explosions.clear();
+    explosions.fragments.clear();
+    explosions.flashing_counter = 0;
+
+    for (int i = DAMAGE; i != LAST; i++)
+    {
+        SoundTypes t = static_cast<SoundTypes>(i);
+        sounds.sounds.at(t).stop();
+    }
+}
+
 bool scene_game_collisions(Ship & ship, Maze & maze, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
     const Assets & assets)
 {
@@ -179,16 +194,8 @@ bool scene_game_collisions(Ship & ship, Maze & maze, Projectiles & projectiles, 
     special_check_bounds(ship, sounds);
     if (ship_check_bounds(maze, ship))
     {
-        projectiles.projectiles.clear();
-        explosions.explosions.clear();
-        explosions.fragments.clear();
-
-        for (int i = DAMAGE; i != LAST; i++)
-        {
-            SoundTypes t = static_cast<SoundTypes>(i);
-            sounds.sounds.at(t).stop();
-        }
-        
+        // next room change
+        scene_game_clear_all(projectiles, explosions, sounds);
         return true;
     }
 

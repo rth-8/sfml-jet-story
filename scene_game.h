@@ -17,6 +17,8 @@ void scene_game_input(Ship & ship, Sounds & sounds, const Assets & assets, float
 void scene_game_update(Ship & ship, Maze & maze, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
     const MazeData & mazeData, const Assets & assets, float dt, int gFrame);
 
+void scene_game_clear_all(Projectiles & projectiles, Explosions & explosions, Sounds & sounds);
+
 bool scene_game_collisions(Ship & ship, Maze & maze, Projectiles & projectiles, Explosions & explosions, Sounds & sounds, 
     const Assets & assets);
 

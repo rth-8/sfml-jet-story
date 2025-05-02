@@ -237,9 +237,19 @@ int main()
     setup_slots_menu(slotsMenu, mainMenu, maze, ship, mazeData, assets, current_scene);
 
     sf::Text loadText(assets.font_menu);
-    sf::Text saveText(assets.font_menu);
     loadText.setString("Load game");
+    loadText.setPosition({400.0f - loadText.getGlobalBounds().size.x * 0.5f, 150.f});
+
+    sf::Text saveText(assets.font_menu);
     saveText.setString("Save game");
+    saveText.setPosition({400.0f - saveText.getGlobalBounds().size.x * 0.5f, 150.f});
+
+    sf::Text gameOverText(assets.font_menu);
+    sf::Text finalScoreText(assets.font_menu);
+    sf::Text finalPrcText(assets.font_menu);
+    gameOverText.setString("Game over!");
+    gameOverText.setFillColor(sf::Color::Red);
+    gameOverText.setPosition({400.0f - gameOverText.getGlobalBounds().size.x * 0.5f, 150.f});
 
     while (window.isOpen())
     {
@@ -255,8 +265,24 @@ int main()
                 window.close();
             }
 
+            if (current_scene == SCENE_TITLE || current_scene == SCENE_GAME_OVER)
+            {
+                if (event->getIf<sf::Event::KeyPressed>() && 
+                    sounds.sounds.at(DEATH).getStatus() != sf::SoundSource::Status::Playing)
+                {
+                    current_scene = SCENE_MAIN_MENU;
+                }
+            }
+            else
             if (current_scene == SCENE_MAIN_MENU)
             {
+                if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+                {
+                    if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
+                    {
+                        window.close();
+                    }
+                }
                 menu_input(mainMenu, event);
             }
             else
@@ -288,10 +314,6 @@ int main()
 
         if (current_scene == SCENE_TITLE)
         {
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter))
-            {
-                current_scene = SCENE_MAIN_MENU;
-            }
             window.clear();
             window.draw(loadingScreenSpr);
             window.display();
@@ -314,6 +336,22 @@ int main()
             window.display();
         }
         else
+        if (current_scene == SCENE_GAME_OVER)
+        {
+            if (sounds.sounds.at(DEATH).getStatus() == sf::SoundSource::Status::Playing)
+            {
+                scene_game_draw(window, ship, maze, projectiles, explosions, infobar, game_frame);
+            }
+            else
+            {
+                window.clear();
+                window.draw(gameOverText);
+                window.draw(finalScoreText);
+                window.draw(finalPrcText);
+                window.display();
+            }
+        }
+        else
         if (current_scene == SCENE_GAME)
         {
             scene_game_input(ship, sounds, assets, dtAsSeconds);
@@ -327,9 +365,29 @@ int main()
             update_infobar(infobar, maze, ship, assets, game_frame);
             scene_game_draw(window, ship, maze, projectiles, explosions, infobar, game_frame);
             scene_game_cleanup(maze, projectiles, explosions);
+
+            if (ship.shield <= 0)
+            {
+                scene_game_clear_all(projectiles, explosions, sounds);
+                sounds.sounds.at(DEATH).play();
+                current_scene = SCENE_GAME_OVER;
+                mainMenu.buttons[BTN_CONTINUE].enabled = false;
+                mainMenu.buttons[BTN_SAVE].enabled = false;
+                mainMenu.buttons[mainMenu.current].selected = false;
+                mainMenu.current = BTN_NEW_GAME;
+                mainMenu.buttons[mainMenu.current].selected = true;
+                finalScoreText.setString(std::format("Score: {}", maze.score));
+                finalScoreText.setPosition({400.0f - finalScoreText.getGlobalBounds().size.x * 0.5f, 250.f});
+                int prc = ((float)(mazeData.base_cnt - maze.base_cnt) / (float)mazeData.base_cnt) * 100.0f;
+                finalPrcText.setString(std::format("Bases: {}%", prc));
+                finalPrcText.setPosition({400.0f - finalPrcText.getGlobalBounds().size.x * 0.5f, 350.f});
+            }
         }
 
-        game_frame++;
+        if (current_scene != SCENE_GAME_OVER)
+        {
+            game_frame++;
+        }
     }
 
     return 0;
