@@ -122,7 +122,7 @@ void load_enemy_specs(MazeData & maze)
             EnemySpec spc;
             int id;
             char del;
-            ss >> id >> del >> spc.health >> del >> spc.shooting_delay >> del >> spc.shooting_speed;
+            ss >> id >> del >> spc.health >> del >> spc.shooting_delay >> del >> spc.shooting_speed >> del >> spc.score;
             maze.enemy_specs.push_back(spc);
 
             line_idx++;

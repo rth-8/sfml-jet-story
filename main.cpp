@@ -53,6 +53,7 @@ void new_game(Ship & ship, Maze & maze, const MazeData & mazeData, const Assets 
     maze.current_room_row = 0;
     maze.current_room_col = 0;
     maze.base_cnt = 0;
+    maze.score = 0;
     create_maze(maze, mazeData, assets);
     get_current_room(maze).visited = true;
     maze.created = true;

@@ -179,6 +179,7 @@ void create_enemy(Enemy & eo, const EnemyData & ed, const MazeData & md, const A
     }
 
     eo.health = md.enemy_specs[eo.anim.id].health;
+    eo.score = md.enemy_specs[eo.anim.id].score;
     eo.shooting_delay = md.enemy_specs[eo.anim.id].shooting_delay;
     eo.shooting_speed = md.enemy_specs[eo.anim.id].shooting_speed;
     eo.shooting_counter = 0;
@@ -186,6 +187,7 @@ void create_enemy(Enemy & eo, const EnemyData & ed, const MazeData & md, const A
     if (ed.carried_enemy.has_value())
     {
         eo.carried_enemy_health = md.enemy_specs[ed.carried_enemy.value().id].health;
+        eo.carried_enemy_score = md.enemy_specs[ed.carried_enemy.value().id].score;
         eo.shooting_delay = md.enemy_specs[ed.carried_enemy.value().id].shooting_delay;
         eo.shooting_speed = md.enemy_specs[ed.carried_enemy.value().id].shooting_speed;
         eo.shooting_counter = 0;
@@ -415,6 +417,7 @@ void spawn_enemy(Room & room, Enemy & spawner, Animation & spawnerAnim, Sounds &
         eo.anim.color_index = std::rand()%7+9;
         eo.anim.sprite.value().setColor(zx_colors[eo.anim.color_index]);
         eo.health = md.enemy_specs[id].health;
+        eo.score = md.enemy_specs[id].score;
         eo.shooting_delay = md.enemy_specs[id].shooting_delay;
         eo.shooting_speed = md.enemy_specs[id].shooting_speed;
 
@@ -597,6 +600,7 @@ bool collision_enemy_ship(Enemy & enemy, Maze & maze, Ship & ship, Explosions & 
             if (enemy.health <= 0)
             {
                 enemy.anim.isAlive = false;
+                maze.score += enemy.score;
                 sounds.sounds.at(DAMAGE).stop();
                 if (enemy.anim.id == 0)
                 {
@@ -634,6 +638,7 @@ bool collision_enemy_ship(Enemy & enemy, Maze & maze, Ship & ship, Explosions & 
                 sounds.sounds.at(DAMAGE).play();
                 if (enemy.carried_enemy_health <= 0)
                 {
+                    maze.score += enemy.carried_enemy_score;
                     sounds.sounds.at(DAMAGE).stop();
                     if (enemy.carried_enemy.value().id == 0)
                     {
@@ -675,6 +680,7 @@ void collision_enemy_cannon(Enemy & enemy, Maze & maze, Ship & ship, Explosions 
         if (enemy.health <= 0)
         {
             enemy.anim.isAlive = false;
+            maze.score += enemy.score;
             if (enemy.anim.id == 0)
             {
                 maze.base_cnt--;
@@ -698,6 +704,7 @@ void collision_enemy_cannon(Enemy & enemy, Maze & maze, Ship & ship, Explosions 
             sounds.sounds.at(HIT_ENEMY).play();
             if (enemy.carried_enemy_health <= 0)
             {
+                maze.score += enemy.carried_enemy_score;
                 if (enemy.carried_enemy.value().id == 0)
                 {
                     maze.base_cnt--;
@@ -725,6 +732,7 @@ void collision_enemy_special(Enemy & enemy, Maze & maze, Ship & ship, Explosions
             ship.special.reset();
         }
         enemy.anim.isAlive = false;
+        maze.score += enemy.score;
         if (enemy.anim.id == 0)
         {
             maze.base_cnt--;
@@ -743,6 +751,7 @@ void collision_enemy_special(Enemy & enemy, Maze & maze, Ship & ship, Explosions
         if (checkCollision(enemy.carried_enemy.value(), ship.special.value()))
         {
             enemy.carried_enemy_health = 0;
+            maze.score += enemy.carried_enemy_score;
             if (ship.special_type == MISSILE_SIDE || ship.special_type == MISSILE_DOWN)
             {
                 ship.special.reset();

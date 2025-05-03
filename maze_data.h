@@ -44,7 +44,8 @@ struct RoomData
 
 struct EnemySpec
 {
-    int health;
+    uint16_t health;
+    uint16_t score;
     float shooting_delay;
     float shooting_speed;
 };

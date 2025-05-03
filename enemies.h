@@ -12,6 +12,8 @@ struct Enemy
     sf::Vector2f velocity;
     uint16_t health;
     uint16_t carried_enemy_health;
+    uint16_t score;
+    uint16_t carried_enemy_score;
     float shooting_counter;
     float shooting_speed;
     float shooting_delay;
