@@ -290,6 +290,7 @@ bool ship_check_bounds(Maze & maze, Ship & ship)
         maze.current_room_row--;
         get_current_room(maze).visited = true;
         ship.ship_body.sprite.value().setPosition({ship.ship_body.sprite.value().getPosition().x, EDGE_BOTTOM - ship.ship_body.half_size.y});
+        ship.previous_position = ship.ship_body.sprite.value().getPosition();
         ship_next_room(ship);
         return true;
     }
@@ -471,11 +472,20 @@ bool load_ship(Ship & ship, int slot)
         input.read(reinterpret_cast <char*>(&ship.special_type), sizeof(SpecialType));
         input.read(reinterpret_cast <char*>(&ship.special_ammo), sizeof(uint8_t));
 
+        ship.previous_position = ship.ship_body.sprite.value().getPosition();
+        ship.velocity = {0.0f, 0.0f};
         ship.damage_delay = 0;
         ship.next_special = INT_MAX;
-
         ship.thrust_up = false;
         ship.thrust_horiz = false;
+        if (ship.cannon.has_value())
+        {
+            ship.cannon.reset();
+        }
+        if (ship.special.has_value())
+        {
+            ship.special.reset();
+        }
 
         input.close();
         return true;
