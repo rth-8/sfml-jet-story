@@ -11,6 +11,8 @@
 #include "infobar.h"
 #include "physics.h"
 
+#define LEFT_STICK_DEADZONE 50.0f
+
 void scene_game_input(Ship & ship, Sounds & sounds, const Assets & assets, float dt)
 {
     ship.previous_position = ship.ship_body.sprite.value().getPosition();
@@ -26,14 +28,17 @@ void scene_game_input(Ship & ship, Sounds & sounds, const Assets & assets, float
     ship.thrust_up = false;
     ship.thrust_horiz = false;
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
+    float lxpos = sf::Joystick::getAxisPosition(0, sf::Joystick::Axis::X);
+    float lypos = sf::Joystick::getAxisPosition(0, sf::Joystick::Axis::Y);
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) || lypos < -LEFT_STICK_DEADZONE)
     {
         ship.velocity.y -= ACCEL_VERT * dt;
         ship.fuel -= FUEL_SUB * dt;
         ship.thrust_up = true;
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) || sf::Joystick::isButtonPressed(0, 0))
     {
         // launch special
         if (!ship.special.has_value() && ship.special_ammo > 0)
@@ -44,7 +49,7 @@ void scene_game_input(Ship & ship, Sounds & sounds, const Assets & assets, float
         }
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) || lxpos < -LEFT_STICK_DEADZONE)
     {
         ship.velocity.x -= ACCEL_HORIZ * dt;
         ship.fuel -= FUEL_SUB * dt;
@@ -52,7 +57,7 @@ void scene_game_input(Ship & ship, Sounds & sounds, const Assets & assets, float
         ship.thrust_horiz = true;
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) || lxpos > LEFT_STICK_DEADZONE)
     {
         ship.velocity.x += ACCEL_HORIZ * dt;
         ship.fuel -= FUEL_SUB * dt;
@@ -60,7 +65,7 @@ void scene_game_input(Ship & ship, Sounds & sounds, const Assets & assets, float
         ship.thrust_horiz = true;
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Joystick::isButtonPressed(0, 2))
     {
         if (!ship.cannon.has_value() && ship.cannon_ammo > 0)
         {

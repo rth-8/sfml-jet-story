@@ -311,6 +311,17 @@ int main()
                     }
                 }
             }
+
+            // test
+            // if (const auto* joystickButtonPressed = event->getIf<sf::Event::JoystickButtonPressed>())
+            // {
+            //     int btn = static_cast<int>(joystickButtonPressed->button);
+            //     printf("Joystick button: %d\n", btn);
+            // }
+            // if (const auto* joystickMoved = event->getIf<sf::Event::JoystickMoved>())
+            // {
+            //     printf("Joystick: axis %d, position %f\n", (int)joystickMoved->axis, joystickMoved->position);
+            // }
         }
 
         if (current_scene == SCENE_TITLE)
