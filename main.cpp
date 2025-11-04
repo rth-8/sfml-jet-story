@@ -47,6 +47,8 @@ enum MainMenuButtons
 #define MAIN_MENU_V_PAD 22
 #define MAIN_MENU_CHAR_SIZE 24
 
+static int transition = 0;
+
 void new_game(Ship & ship, Maze & maze, const MazeData & mazeData, const Assets & assets)
 {
     maze.rooms.clear();
@@ -95,10 +97,15 @@ void setup_main_menu(Menu & m, sf::RenderWindow & window, Ship & ship, Maze & ma
         m.buttons[BTN_CONTINUE].enabled = true;
         m.buttons[BTN_SAVE].enabled = true;
         current_scene = SCENE_GAME;
+        transition = 10;
     };
 
     m.buttons[BTN_CONTINUE].callback = [&maze, &current_scene] () {
-        if (maze.created) current_scene = SCENE_GAME;
+        if (maze.created)
+        {
+            current_scene = SCENE_GAME;
+            transition = 10;
+        }
     };
 
     m.buttons[BTN_LOAD].callback = [&maze, &current_scene] () {
@@ -268,10 +275,17 @@ int main()
 
             if (current_scene == SCENE_TITLE || current_scene == SCENE_GAME_OVER)
             {
-                if (event->getIf<sf::Event::KeyPressed>() && 
-                    sounds.sounds.at(DEATH).getStatus() != sf::SoundSource::Status::Playing)
+                if (sounds.sounds.at(DEATH).getStatus() != sf::SoundSource::Status::Playing)
                 {
-                    current_scene = SCENE_MAIN_MENU;
+                    if (event->getIf<sf::Event::KeyPressed>())
+                    {
+                        current_scene = SCENE_MAIN_MENU;
+                    }
+
+                    if (event->getIf<sf::Event::JoystickButtonPressed>())
+                    {
+                        current_scene = SCENE_MAIN_MENU;
+                    }
                 }
             }
             else
@@ -297,6 +311,15 @@ int main()
                         current_scene = SCENE_MAIN_MENU;
                     }
                 }
+
+                if (const auto* joystickButtonPressed = event->getIf<sf::Event::JoystickButtonPressed>())
+                {
+                    if (joystickButtonPressed->button == 8 || joystickButtonPressed->button == 9)
+                    {
+                        back_to_main_menu_continue(mainMenu);
+                        current_scene = SCENE_MAIN_MENU;
+                    }
+                }
             }
             else
             if (current_scene == SCENE_LOAD || current_scene == SCENE_SAVE)
@@ -306,6 +329,14 @@ int main()
                 if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
                 {
                     if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
+                    {
+                        current_scene = SCENE_MAIN_MENU;
+                    }
+                }
+
+                if (const auto* joystickButtonPressed = event->getIf<sf::Event::JoystickButtonPressed>())
+                {
+                    if (joystickButtonPressed->button == 1)
                     {
                         current_scene = SCENE_MAIN_MENU;
                     }
@@ -366,7 +397,14 @@ int main()
         else
         if (current_scene == SCENE_GAME)
         {
-            scene_game_input(ship, sounds, assets, dtAsSeconds);
+            if (!transition)
+            {
+                scene_game_input(ship, sounds, assets, dtAsSeconds);
+            }
+            else
+            {
+                transition--;
+            }
             scene_game_update(ship, maze, projectiles, explosions, sounds, mazeData, assets, dtAsSeconds, game_frame);
             if (scene_game_collisions(ship, maze, projectiles, explosions, sounds, assets))
             {

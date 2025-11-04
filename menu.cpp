@@ -78,42 +78,52 @@ void draw_menu(sf::RenderWindow & window, Menu & menu)
     }
 }
 
+void menu_up(Menu & menu)
+{
+    if (menu.current > 0)
+    {
+        for (size_t i = menu.current-1; i >= 0; --i)
+        {
+            if (menu.buttons[i].enabled)
+            {
+                menu.buttons[menu.current].selected = false;
+                menu.current = i;
+                menu.buttons[menu.current].selected = true;
+                break;
+            }
+        }
+    }
+}
+
+void menu_down(Menu & menu)
+{
+    if (menu.current < menu.buttons.size() - 1)
+    {
+        for (size_t i = menu.current+1; i < menu.buttons.size(); ++i)
+        {
+            if (menu.buttons[i].enabled)
+            {
+                menu.buttons[menu.current].selected = false;
+                menu.current = i;
+                menu.buttons[menu.current].selected = true;
+                break;
+            }
+        }
+    }
+}
+
 void menu_input(Menu & menu, const std::optional<sf::Event> event)
 {
     if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
     {
         if (keyPressed->scancode == sf::Keyboard::Scancode::Up)
         {
-            if (menu.current > 0)
-            {
-                for (size_t i = menu.current-1; i >= 0; --i)
-                {
-                    if (menu.buttons[i].enabled)
-                    {
-                        menu.buttons[menu.current].selected = false;
-                        menu.current = i;
-                        menu.buttons[menu.current].selected = true;
-                        break;
-                    }
-                }
-            }
+            menu_up(menu);
         }
         
         if (keyPressed->scancode == sf::Keyboard::Scancode::Down)
         {
-            if (menu.current < menu.buttons.size() - 1)
-            {
-                for (size_t i = menu.current+1; i < menu.buttons.size(); ++i)
-                {
-                    if (menu.buttons[i].enabled)
-                    {
-                        menu.buttons[menu.current].selected = false;
-                        menu.current = i;
-                        menu.buttons[menu.current].selected = true;
-                        break;
-                    }
-                }
-            }
+            menu_down(menu);
         }
         
         if (keyPressed->scancode == sf::Keyboard::Scancode::Enter)
@@ -125,6 +135,44 @@ void menu_input(Menu & menu, const std::optional<sf::Event> event)
         }
     }
     
+    if (const auto* joystickMoved = event->getIf<sf::Event::JoystickMoved>())
+    {
+        if (joystickMoved->axis == sf::Joystick::Axis::Y)
+        {
+            if (joystickMoved->position == -100)
+            {
+                menu_up(menu);
+            }
+            else if (joystickMoved->position == 100)
+            {
+                menu_down(menu);
+            }
+        }
+
+        if (joystickMoved->axis == sf::Joystick::Axis::PovY)
+        {
+            if (joystickMoved->position == 100)
+            {
+                menu_up(menu);
+            }
+            else if (joystickMoved->position == -100)
+            {
+                menu_down(menu);
+            }
+        }
+    }
+
+    if (const auto* joystickButtonPressed = event->getIf<sf::Event::JoystickButtonPressed>())
+    {
+        if (joystickButtonPressed->button == 0)
+        {
+            if (menu.buttons[menu.current].callback)
+            {
+                menu.buttons[menu.current].callback();
+            }
+        }
+    }
+
     if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>())
     {
         for (size_t i=0; i<menu.buttons.size(); ++i)
