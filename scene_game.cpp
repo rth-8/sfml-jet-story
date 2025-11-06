@@ -34,7 +34,6 @@ void scene_game_input(Ship & ship, Sounds & sounds, const Assets & assets, float
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) || lypos < -LEFT_STICK_DEADZONE)
     {
         ship.velocity.y -= ACCEL_VERT * dt;
-        ship.fuel -= FUEL_SUB * dt;
         ship.thrust_up = true;
     }
 
@@ -52,7 +51,6 @@ void scene_game_input(Ship & ship, Sounds & sounds, const Assets & assets, float
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) || lxpos < -LEFT_STICK_DEADZONE)
     {
         ship.velocity.x -= ACCEL_HORIZ * dt;
-        ship.fuel -= FUEL_SUB * dt;
         ship.ship_body.sprite.value().setScale({-1, 1});
         ship.thrust_horiz = true;
     }
@@ -60,7 +58,6 @@ void scene_game_input(Ship & ship, Sounds & sounds, const Assets & assets, float
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) || lxpos > LEFT_STICK_DEADZONE)
     {
         ship.velocity.x += ACCEL_HORIZ * dt;
-        ship.fuel -= FUEL_SUB * dt;
         ship.ship_body.sprite.value().setScale({1, 1});
         ship.thrust_horiz = true;
     }
@@ -73,6 +70,11 @@ void scene_game_input(Ship & ship, Sounds & sounds, const Assets & assets, float
             create_cannon(ship, assets);
             sounds.sounds.at(CANNON_SHOT).play();
         }
+    }
+
+    if (ship.thrust_up || ship.thrust_horiz)
+    {
+        ship.fuel -= FUEL_SUB * dt;
     }
 }
 
