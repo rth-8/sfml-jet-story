@@ -2,8 +2,10 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 #include <SFML/Window.hpp>
+#include <SFML/Window/VideoMode.hpp>
 #include <SFML/Graphics.hpp>
 
 #include "assets.h"
@@ -19,6 +21,9 @@
 
 #define WINDOW_W 800
 #define WINDOW_H 600
+
+#define WINDOW_CX 400
+#define WINDOW_CY 300
 
 enum Scenes
 {
@@ -192,13 +197,51 @@ void setup_slots_menu(Menu & m, Menu & mainMenu, Maze & maze, Ship & ship, const
     }
 }
 
+void update_view(sf::RenderWindow & window)
+{
+    printf("Window: %d x %d\n", window.getSize().x, window.getSize().y);
+    printf("View  : %f x %f\n", window.getView().getSize().x, window.getView().getSize().y);
+
+    // sf::View view({WINDOW_CX, WINDOW_CY}, {WINDOW_W, WINDOW_H});
+    // sf::View view({WINDOW_CX, WINDOW_CY}, sf::Vector2f(window.getSize()));
+
+    float w = 0;
+    float h = 0;
+    if (window.getSize().x > window.getSize().y)
+    {
+        printf("LANDSCAPE\n");
+        float ratio = (float)window.getSize().x / (float)window.getSize().y;
+        w = ratio * WINDOW_H;
+        h = WINDOW_H;
+    }
+    else
+    {
+        printf("PORTRAIT\n");
+        float ratio = (float)window.getSize().x / (float)window.getSize().y;
+        w = WINDOW_W;
+        h = WINDOW_W / ratio;
+    }
+    printf("New view: %f x %f\n", w, h);
+    sf::View view({WINDOW_CX, WINDOW_CY}, {w, h});
+
+    window.setView(view);
+}
+
 int main()
 {
     std::srand(std::time({}));
 
-    sf::RenderWindow window(sf::VideoMode({WINDOW_W, WINDOW_H}), "js");
+    auto & modes = sf::VideoMode::getFullscreenModes();
+    for (auto & mode : modes)
+    {
+        printf("Mode: %d x %d (%s)\n", mode.size.x, mode.size.y, mode.isValid() ? "OK" : "x");
+    }
+
+    sf::RenderWindow window(sf::VideoMode({WINDOW_W, WINDOW_H}), "js", sf::State::Windowed);
     window.setFramerateLimit(60);
     window.setKeyRepeatEnabled(false);
+    update_view(window);
+    bool isFullscreen = false;
 
     sf::Clock clock;
     int game_frame = 0;
@@ -271,6 +314,37 @@ int main()
             if (event->is<sf::Event::Closed>())
             {
                 window.close();
+            }
+            else
+            if (event->is<sf::Event::Resized>())
+            {
+                update_view(window);
+            }
+            else
+            if (const auto* kr = event->getIf<sf::Event::KeyReleased>())
+            {
+                if (kr->scancode == sf::Keyboard::Scancode::Enter && kr->alt)
+                {
+                    if (isFullscreen)
+                    {
+                        // go to windowed
+                        window.create(sf::VideoMode({WINDOW_W, WINDOW_H}), "js", sf::State::Windowed);
+                        window.setFramerateLimit(60);
+                        window.setKeyRepeatEnabled(false);
+                        update_view(window);
+                        isFullscreen = false;
+                    }
+                    else
+                    {
+                        // go to fullscreen
+                        // TODO: fullscreen resolution will be part of setting
+                        window.create(sf::VideoMode({1920, 1080}), "js", sf::State::Fullscreen);
+                        window.setFramerateLimit(60);
+                        window.setKeyRepeatEnabled(false);
+                        update_view(window);
+                        isFullscreen = true;
+                    }
+                }
             }
 
             if (current_scene == SCENE_TITLE || current_scene == SCENE_GAME_OVER)
