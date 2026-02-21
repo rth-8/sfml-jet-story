@@ -147,7 +147,7 @@ bool scene_game_collisions(Ship & ship, Maze & maze, Projectiles & projectiles, 
 
         for (auto & fg : explosions.fragments)
         {
-            if (checkCollision(fg.anim, wall))
+            if (fg.check_collision && checkCollision(fg.anim, wall))
             {
                 fg.anim.isAlive = false;
             }
@@ -344,6 +344,12 @@ void scene_game_draw(sf::RenderWindow & window, Ship & ship, Maze & maze, Projec
         window.draw(prj.anim.sprite.value());
     }
 
+    // draw walls
+    for (auto & wall : room.walls)
+    {
+        window.draw(wall.sprite.value());
+    }
+
     // draw explosions
     for (auto & expl : explosions.explosions)
     {
@@ -354,12 +360,6 @@ void scene_game_draw(sf::RenderWindow & window, Ship & ship, Maze & maze, Projec
     for (auto & fg : explosions.fragments)
     {
         window.draw(fg.anim.sprite.value());
-    }
-
-    // draw walls
-    for (auto & wall : room.walls)
-    {
-        window.draw(wall.sprite.value());
     }
 
     window.display();

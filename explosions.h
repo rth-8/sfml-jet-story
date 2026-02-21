@@ -16,6 +16,7 @@ struct Fragment
 {
     Animation anim;
     sf::Vector2f velocity;
+    uint8_t check_collision;
 };
 
 struct Explosions

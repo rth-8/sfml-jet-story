@@ -33,6 +33,8 @@ enum Scenes
     SCENE_LOAD,
     SCENE_SAVE,
     SCENE_GAME_OVER,
+    SCENE_NO_BASES,
+    SCENE_WIN,
 };
 
 enum MainMenuButtons
@@ -302,6 +304,12 @@ int main()
     gameOverText.setFillColor(sf::Color::Red);
     gameOverText.setPosition({400.0f - gameOverText.getGlobalBounds().size.x * 0.5f, 150.f});
 
+    sf::Text winText(assets.font_menu);
+    winText.setString("Mission accomplished!");
+    winText.setFillColor(sf::Color::Green);
+    winText.setPosition({400.0f - winText.getGlobalBounds().size.x * 0.5f, 150.f});
+    int end_game_booms = 0;
+
     while (window.isOpen())
     {
         sf::Time dt = clock.restart();
@@ -347,15 +355,15 @@ int main()
                 }
             }
 
-            if (current_scene == SCENE_TITLE || current_scene == SCENE_GAME_OVER)
+            if (current_scene == SCENE_TITLE || current_scene == SCENE_GAME_OVER || current_scene == SCENE_WIN)
             {
                 if (sounds.sounds.at(DEATH).getStatus() != sf::SoundSource::Status::Playing)
                 {
+                    // Any key or joystick button to return to main menu
                     if (event->getIf<sf::Event::KeyPressed>())
                     {
                         current_scene = SCENE_MAIN_MENU;
                     }
-
                     if (event->getIf<sf::Event::JoystickButtonPressed>())
                     {
                         current_scene = SCENE_MAIN_MENU;
@@ -377,6 +385,7 @@ int main()
             else
             if (current_scene == SCENE_GAME)
             {
+                // ESC to main menu
                 if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
                 {
                     if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
@@ -385,7 +394,7 @@ int main()
                         current_scene = SCENE_MAIN_MENU;
                     }
                 }
-
+                // Button 8 or 9 to main menu (Start or Select on Xbox controller)
                 if (const auto* joystickButtonPressed = event->getIf<sf::Event::JoystickButtonPressed>())
                 {
                     if (joystickButtonPressed->button == 8 || joystickButtonPressed->button == 9)
@@ -469,9 +478,17 @@ int main()
             }
         }
         else
-        if (current_scene == SCENE_GAME)
+        if (current_scene == SCENE_WIN)
         {
-            if (!transition)
+            window.clear();
+            window.draw(winText);
+            window.draw(finalScoreText);
+            window.display();
+        }
+        else
+        if (current_scene == SCENE_GAME || current_scene == SCENE_NO_BASES)
+        {
+            if (!transition && current_scene == SCENE_GAME)
             {
                 scene_game_input(ship, sounds, assets, dtAsSeconds);
             }
@@ -505,6 +522,44 @@ int main()
                 int prc = ((float)(mazeData.base_cnt - maze.base_cnt) / (float)mazeData.base_cnt) * 100.0f;
                 finalPrcText.setString(std::format("Bases: {}%", prc));
                 finalPrcText.setPosition({400.0f - finalPrcText.getGlobalBounds().size.x * 0.5f, 350.f});
+            }
+
+            if (maze.base_cnt == 0 && current_scene != SCENE_NO_BASES)
+            {
+                current_scene = SCENE_NO_BASES;
+                mainMenu.buttons[BTN_CONTINUE].enabled = false;
+                mainMenu.buttons[BTN_SAVE].enabled = false;
+                mainMenu.buttons[mainMenu.current].selected = false;
+                mainMenu.current = BTN_NEW_GAME;
+                mainMenu.buttons[mainMenu.current].selected = true;
+                finalScoreText.setString(std::format("Score: {}", maze.score));
+                finalScoreText.setPosition({400.0f - finalScoreText.getGlobalBounds().size.x * 0.5f, 250.f});
+                end_game_booms = 500;
+            }
+
+            if (current_scene == SCENE_NO_BASES)
+            {
+                if (sounds.sounds.at(BOOM_BASE).getStatus() != sf::SoundSource::Status::Playing &&
+                    explosions.flashing_counter == 0 &&
+                    explosions.fragments.empty())
+                {
+                    scene_game_clear_all(projectiles, explosions, sounds);
+                    current_scene = SCENE_WIN;
+                }
+                else
+                {
+                    if (end_game_booms > 0)
+                    {
+                        if (end_game_booms % 3 == 0)
+                        {
+                            sounds.sounds.at(BOOM).play();
+                        }
+                        create_explosion(explosions, 
+                            {static_cast<float>(std::rand() % WINDOW_W), static_cast<float>(std::rand() % WINDOW_H)}, assets);
+                        explosions.fragments.back().check_collision = 0;
+                        end_game_booms--;
+                    }
+                }
             }
         }
 

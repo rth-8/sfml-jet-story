@@ -8,6 +8,7 @@ void create_fragment(Explosions & explosions, const sf::Vector2f & pos, const sf
     fg.anim.sprite.value().setPosition(pos);
     set_frame(fg.anim, std::rand() % fg.anim.frame_count);
     fg.velocity = velocity;
+    fg.check_collision = 1;
     explosions.fragments.push_back(fg);
 }
 
